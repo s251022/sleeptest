@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SleepPulse AI - アンケート & 睡眠解析Webアプリ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            900: '#312e81',
+                        },
+                        accent: {
+                            teal: '#14b8a6',
+                            purple: '#a855f7',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-effect {
+            animation: pulse-ring 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- App Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-teal flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid font-bold fa-moon text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base tracking-tight text-slate-100">SleepPulse AI</h1>
+                    <p class="text-xs text-slate-400">睡眠目標診断 & 高精度リアルタイム解析</p>
+                </div>
+            </div>
+            <div id="statusBadge" class="hidden sm:flex items-center space-x-2 bg-slate-800 px-3 py-1 rounded-full text-xs text-slate-300 border border-slate-700">
+                <span class="w-2 h-2 rounded-full bg-slate-500" id="globalStatusDot"></span>
+                <span id="globalStatusText">待機中</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
+
+        <!-- ==================== STEP 1: アンケート入力画面 ==================== -->
+        <section id="surveyInputScreen" class="space-y-6 my-auto py-4">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold text-white tracking-tight">睡眠時間設定 & 睡眠負債診断</h2>
+                <p class="text-sm text-slate-400 max-w-md mx-auto">
+                    年齢、目標時間、日頃の睡眠状態を入力して現在の睡眠負債（借金）を診断します。
+                </p>
+            </div>
+
+            <!-- 過去の負債引き継ぎ通知バナー -->
+            <div id="savedDebtBanner" class="hidden bg-brand-950/60 border border-brand-500/40 rounded-2xl p-4 text-xs text-brand-200 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-400 text-base"></i>
+                    <span>前回の睡眠負債記録を保持しています: <strong id="savedDebtText" class="text-brand-300 font-mono text-sm">0時間0分</strong></span>
+                </div>
+                <button type="button" onclick="clearSavedDebt()" class="px-2.5 py-1 bg-rose-900/50 hover:bg-rose-800 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] transition">
+                    リセット
+                </button>
+            </div>
+
+            <!-- 年齢設定 -->
+            <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+                <div class="flex justify-between items-baseline">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">年齢</span>
+                    <div>
+                        <span class="text-3xl font-black text-brand-400" id="ageVal">30</span>
+                        <span class="font-bold text-slate-200"> 歳</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2">
+                    <button type="button" onclick="setAge(5)" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-brand-600 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">0~5歳</button>
+                    <button type="button" onclick="setAge(15)" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-brand-600 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">10代</button>
+                    <button type="button" onclick="setAge(30)" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-brand-600 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">20~50代</button>
+                    <button type="button" onclick="setAge(65)" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-brand-600 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">60代~</button>
+                </div>
+
+                <div class="flex items-center space-x-3 pt-2">
+                    <button type="button" onclick="adjustAge(-1)" class="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 font-bold text-brand-400 text-xl flex items-center justify-center hover:bg-slate-700 active:scale-95 transition">-</button>
+                    <input type="range" id="ageSlider" class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500" min="0" max="100" value="30" oninput="setAge(parseInt(this.value))">
+                    <button type="button" onclick="adjustAge(1)" class="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 font-bold text-brand-400 text-xl flex items-center justify-center hover:bg-slate-700 active:scale-95 transition">+</button>
+                </div>
+            </div>
+
+            <!-- 就寝時間 -->
+            <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">就寝時間 (24時間表記)</div>
+                <div class="text-4xl font-black text-brand-400 font-mono text-center tracking-tight" id="sleepDisplay">23:00</div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="adjustTime('sleepSelect', -60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">-1時間</button>
+                    <div class="flex-1">
+                        <select id="sleepSelect" onchange="updateCalculations()" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 text-center text-slate-100 font-bold focus:outline-none focus:border-brand-500"></select>
+                    </div>
+                    <button type="button" onclick="adjustTime('sleepSelect', 60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">+1時間</button>
+                </div>
+            </div>
+
+            <!-- 起床時間 -->
+            <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">起床時間 (24時間表記)</div>
+                <div class="text-4xl font-black text-brand-400 font-mono text-center tracking-tight" id="wakeDisplay">07:00</div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="adjustTime('wakeSelect', -60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">-1時間</button>
+                    <div class="flex-1">
+                        <select id="wakeSelect" onchange="updateCalculations()" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-3 text-center text-slate-100 font-bold focus:outline-none focus:border-brand-500"></select>
+                    </div>
+                    <button type="button" onclick="adjustTime('wakeSelect', 60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">+1時間</button>
+                </div>
+            </div>
+
+            <!-- 睡眠不足度（睡眠負債）チェック質問 -->
+            <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+                <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                    <i class="fa-solid fa-battery-quarter text-rose-400"></i>
+                    <h3 class="text-sm font-bold text-slate-200">日頃の睡眠不足度チェック（睡眠負債診断）</h3>
+                </div>
+
+                <!-- Q1: 日中の眠気 -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-semibold">Q1. 日中（仕事や授業中など）に強烈な眠気を感じますか？</label>
+                    <select id="qDayDrowsiness" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
+                        <option value="0">ほとんどない（すっきり過ごせる）</option>
+                        <option value="60" selected>たまに眠気を感じる</option>
+                        <option value="120">よく強い眠気を感じる</option>
+                        <option value="180">毎日耐えられないほどの眠気がある</option>
+                    </select>
+                </div>
+
+                <!-- Q2: 休日の朝寝坊 -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-semibold">Q2. 休日は平日よりどのくらい長く寝てしまいますか？</label>
+                    <select id="qHolidaySleep" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
+                        <option value="0">平日と変わらない（1時間未満）</option>
+                        <option value="60" selected>1〜2時間長く寝る</option>
+                        <option value="150">2〜3時間長く寝る</option>
+                        <option value="240">3時間以上長く寝てしまう</option>
+                    </select>
+                </div>
+
+                <!-- Q3: 朝の起床時の感覚 -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-semibold">Q3. 朝起きた時の満足度・目覚めの感覚はどうですか？</label>
+                    <select id="qWakeQuality" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
+                        <option value="0">目覚まし前に起きられ、すっきりしている</option>
+                        <option value="60" selected>少しだるさや眠気が残る</option>
+                        <option value="120">体が重く、なかなか起き上がれない</option>
+                        <option value="180">常に疲労感が残っており限界を感じる</option>
+                    </select>
+                </div>
+
+                <!-- Q4: 継続日数 -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-800">
+                    <label class="text-xs text-slate-300 font-semibold">Q4. 現在の睡眠生活（設定した就寝・起床時間）は何日続いていますか？</label>
+                    <div class="flex items-center space-x-3">
+                        <input type="number" id="qDaysContinued" min="1" max="365" value="14" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs font-bold text-slate-100 focus:outline-none focus:border-brand-500">
+                        <span class="text-xs text-slate-300 font-bold whitespace-nowrap">日間</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 入力時間のサマリー -->
+            <div class="bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 text-center text-white shadow-xl shadow-brand-600/20">
+                <div class="text-xs font-medium opacity-90 mb-1">設定された目標睡眠時間</div>
+                <div class="text-3xl font-black font-mono tracking-tight" id="durationDisplay">8時間00分</div>
+            </div>
+
+            <button type="button" onclick="saveAndShowResults()" class="w-full py-4 bg-brand-600 hover:bg-brand-500 active:scale-98 transition text-white font-bold text-lg rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 cursor-pointer">
+                <span>設定を保存して診断する</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </section>
+
+
+        <!-- ==================== STEP 2: アンケート結果表示画面 ==================== -->
+        <section id="surveyResultScreen" class="hidden space-y-6 my-auto py-4">
+            <div class="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+                <div class="inline-flex items-center space-x-2 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>設定 & 診断が完了しました</span>
+                </div>
+
+                <div class="text-xs font-semibold text-slate-400" id="resAgeText">30歳の睡眠データ</div>
+
+                <!-- 目標睡眠時間 -->
+                <div class="text-center py-2">
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">目標睡眠時間</div>
+                    <div class="text-5xl font-black text-brand-400 font-mono tracking-tight" id="resActualTime">8時間00分</div>
+                </div>
+
+                <!-- 睡眠負債（借金）カード -->
+                <div class="bg-gradient-to-r from-rose-950/80 to-amber-950/80 rounded-2xl p-5 text-center border border-rose-500/40 shadow-lg">
+                    <div class="flex justify-center items-center space-x-2 text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span>現在の残りの睡眠負債（借金）</span>
+                    </div>
+                    <div class="text-4xl font-black text-rose-300 font-mono tracking-tight py-1" id="resDebtTime">0時間00分</div>
+                    <p class="text-xs text-rose-200/80 mt-1">
+                        蓄積された睡眠不足の累積データです。<br>高スコアの睡眠を計測して負債をどんどん減らしていきましょう！
+                    </p>
+                </div>
+
+                <!-- 差分カード -->
+                <div id="diffHeroBox" class="rounded-2xl p-4 text-center border transition-all">
+                    <div class="text-xs font-bold opacity-90 mb-1" id="diffHeroTitle">理想の睡眠時間との差</div>
+                    <div class="text-2xl font-black" id="diffHeroValue">+0分</div>
+                </div>
+
+                <!-- 昼夜逆転 警告＆提案カード -->
+                <div id="warningCard" class="hidden bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4 text-left space-y-3">
+                    <div class="flex items-center space-x-2 text-amber-400 font-bold text-sm">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>睡眠リズムに関する注意</span>
+                    </div>
+                    <p class="text-xs text-amber-200/90 leading-relaxed">
+                        就寝・起床時間が夜型〜昼夜逆転傾向にあります。<br>
+                        体内時計（概日リズム）が乱れると、睡眠の質低下や日中の強烈な眠気だけでなく、<strong>自律神経の乱れ・生活習慣病・メンタル不調のリスク</strong>が高まることが知られています。
+                    </p>
+                    <div class="bg-slate-950/60 rounded-xl p-3 border border-amber-500/20 text-xs">
+                        <div class="font-bold text-amber-300 mb-1">💡 年齢に応じた理想的な生活リズム提案</div>
+                        <div class="flex justify-between text-amber-100 font-mono">
+                            <div>就寝: <span id="sugSleep">22:00〜23:00</span></div>
+                            <div>起床: <span id="sugWake">06:00〜07:00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 比較グリッド -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
+                        <div class="text-[10px] text-slate-400 font-semibold mb-1">年齢区分</div>
+                        <div class="text-sm font-bold text-slate-100" id="resCategoryName">成人 (18~64歳)</div>
+                    </div>
+                    <div class="bg-brand-950/40 p-3.5 rounded-xl border border-brand-500/30">
+                        <div class="text-[10px] text-brand-300 font-semibold mb-1">理想の睡眠時間</div>
+                        <div class="text-sm font-bold text-brand-400" id="resIdealRange">7〜9時間</div>
+                    </div>
+                </div>
+
+                <!-- 詳細設定 -->
+                <div class="flex justify-around bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-center">
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-semibold mb-0.5">就寝時間</div>
+                        <div class="text-lg font-bold font-mono text-slate-100" id="resSleepTime">23:00</div>
+                    </div>
+                    <div class="border-r border-slate-800"></div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-semibold mb-0.5">起床時間</div>
+                        <div class="text-lg font-bold font-mono text-slate-100" id="resWakeTime">07:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- アクションボタン群 -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button type="button" onclick="backToInput()" class="w-full sm:w-1/2 py-3.5 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 font-bold text-sm rounded-2xl border border-slate-700 transition cursor-pointer flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>設定変更 / 過去データ確認</span>
+                </button>
+
+                <button type="button" onclick="proceedToSleepDetect()" class="w-full sm:w-1/2 py-3.5 bg-gradient-to-r from-brand-600 to-accent-teal hover:from-brand-500 hover:to-accent-teal active:scale-98 text-white font-bold text-sm rounded-2xl shadow-lg shadow-brand-600/30 transition cursor-pointer flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bed"></i>
+                    <span>睡眠計測に進む</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==================== STEP 3: SleepDetect2 準備画面 (setupScreen) ==================== -->
+        <section id="setupScreen" class="hidden space-y-6 my-auto py-4">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold text-white tracking-tight">睡眠計測の準備</h2>
+                <p class="text-sm text-slate-400 max-w-md mx-auto">
+                    スマートフォンのセンサー（加速度・マイク）を利用して睡眠サイクルや体動をリアルタイム計測・解析します。
+                </p>
+            </div>
+
+            <!-- Sensor Checklist -->
+            <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">センサー & システムステータス</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- Wake Lock -->
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-brand-400" id="iconWakeLock">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs text-slate-400">画面常時点灯</p>
+                            <p class="text-xs font-semibold text-slate-200" id="statusWakeLock">確認中...</p>
+                        </div>
+                    </div>
+
+                    <!-- Accelerometer -->
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-accent-teal" id="iconAccel">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs text-slate-400">加速度センサー</p>
+                            <p class="text-xs font-semibold text-slate-200" id="statusAccel">未認証</p>
+                        </div>
+                    </div>
+
+                    <!-- Microphone -->
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-accent-purple" id="iconMic">
+                            <i class="fa-solid fa-microphone"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs text-slate-400">マイク（音量解析）</p>
+                            <p class="text-xs font-semibold text-slate-200" id="statusMic">未許可</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-brand-900/30 border border-brand-500/20 rounded-xl text-xs text-brand-200 flex items-start space-x-2.5">
+                    <i class="fa-solid fa-circle-info text-brand-400 mt-0.5 text-sm"></i>
+                    <span>枕元にスマホを画面を下にして設置することをお勧めします。画面オフによる中断を防ぐためスクリーンドーム機能（消灯表示）が起動します。</span>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 text-center pt-2">
+                <button type="button" onclick="backToSurveyResult()" class="w-full sm:w-1/3 py-4 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 font-semibold text-sm rounded-2xl border border-slate-700 transition cursor-pointer">
+                    アンケート画面に戻る
+                </button>
+                <button id="btnStartTracking" onclick="startSleepTracking()" class="w-full sm:w-2/3 px-8 py-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 active:scale-98 transition text-white font-semibold text-base rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-bed text-lg"></i>
+                    <span>計測を開始する</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==================== STEP 4: SleepDetect2 計測中画面 (trackingScreen) ==================== -->
+        <section id="trackingScreen" class="hidden space-y-6 my-auto py-4 text-center">
+            <div class="relative w-32 h-32 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 bg-brand-500/20 rounded-full pulse-effect"></div>
+                <div class="relative z-10 w-24 h-24 bg-gradient-to-tr from-brand-600 to-indigo-900 rounded-full flex items-center justify-center shadow-2xl border border-brand-400/30">
+                    <i class="fa-solid fa-moon text-4xl text-white"></i>
+                </div>
+            </div>
+
+            <div>
+                <span class="inline-block px-3 py-1 bg-brand-900/50 border border-brand-500/30 rounded-full text-xs text-brand-300 font-medium mb-2">
+                    <i class="fa-solid fa-circle text-[8px] text-emerald-400 animate-pulse mr-1.5"></i>計測中
+                </span>
+                <h2 class="text-3xl font-extrabold text-white tracking-tight" id="liveTimer">00:00:00</h2>
+                <p class="text-xs text-slate-400 mt-1" id="liveStartTimeJst">就寝時刻: --:--:--</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-left">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-slate-400"><i class="fa-solid fa-wave-square text-accent-teal mr-1"></i>体動強度</span>
+                        <span class="text-xs font-mono text-slate-300" id="valMovement">0.00</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="barMovement" class="bg-accent-teal h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-left">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-slate-400"><i class="fa-solid fa-volume-high text-accent-purple mr-1"></i>周囲音量</span>
+                        <span class="text-xs font-mono text-slate-300" id="valDecibels">0 dB</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="barDecibels" class="bg-accent-purple h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
+                <button onclick="enableOledSaver()" class="w-full sm:w-auto px-5 py-3 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 text-sm font-medium rounded-xl border border-slate-700 flex items-center justify-center space-x-2 transition cursor-pointer">
+                    <i class="fa-solid fa-eye-slash text-slate-400"></i>
+                    <span>画面消灯モード (OLED)</span>
+                </button>
+
+                <button onclick="stopSleepTracking()" class="w-full sm:w-auto px-6 py-3 bg-rose-600/90 hover:bg-rose-600 active:scale-98 text-white text-sm font-semibold rounded-xl shadow-lg shadow-rose-600/20 flex items-center justify-center space-x-2 transition cursor-pointer">
+                    <i class="fa-solid fa-square"></i>
+                    <span>計測を終了する</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Pitch Black OLED Protection Overlay -->
+        <div id="oledOverlay" class="fixed inset-0 bg-black z-50 hidden flex-col items-center justify-between p-8 text-center select-none cursor-pointer" oncontextmenu="return false;">
+            <div class="pt-12 opacity-30">
+                <i class="fa-solid fa-moon text-3xl text-slate-500"></i>
+            </div>
+            <div class="space-y-2">
+                <p class="text-slate-600 text-xs tracking-widest font-mono">SLEEP TRACKING ACTIVE</p>
+                <p class="text-slate-500 text-sm font-light">長押しして画面ロックを解除</p>
+            </div>
+            <div class="pb-8 w-full max-w-xs">
+                <div class="w-full bg-slate-900 h-1 rounded-full overflow-hidden">
+                    <div id="unlockProgress" class="bg-brand-500 h-full w-0 transition-all duration-75"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================== STEP 5: SleepDetect2 解析報告画面 (reportScreen) ==================== -->
+        <section id="reportScreen" class="hidden space-y-6 my-auto py-4">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-900/60 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-5">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-brand-400">Sleep Summary Report</span>
+                        <h2 class="text-2xl font-bold text-white mt-0.5">睡眠スコア解析結果</h2>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-slate-950 px-4 py-2.5 rounded-2xl border border-slate-800">
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 uppercase tracking-widest">Sleep Score</p>
+                            <p class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-teal" id="reportScore">--</p>
+                        </div>
+                        <i class="fa-solid fa-award text-2xl text-amber-400"></i>
+                    </div>
+                </div>
+
+                <!-- Cloudflare 送信ステータス -->
+                <div id="cfStatusBox" class="hidden rounded-xl p-3 border text-xs flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i id="cfStatusIcon" class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                        <span id="cfStatusText">Cloudflare へデータを送信中...</span>
+                    </div>
+                </div>
+
+                <!-- 睡眠負債返済結果カード -->
+                <div class="bg-slate-950/90 rounded-2xl p-5 border border-brand-500/30 shadow-xl space-y-3">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                        <i class="fa-solid fa-piggy-bank text-sm"></i>
+                        <span>睡眠負債（借金）返済レポート</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-semibold block">今回の返済額 (減額)</span>
+                            <span class="text-xl font-extrabold text-emerald-400 font-mono" id="reportRepaidDebt">-0分</span>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 font-semibold block">残りの睡眠負債</span>
+                            <span class="text-xl font-extrabold text-rose-400 font-mono" id="reportRemainingDebt">0時間0分</span>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 text-center leading-relaxed" id="reportDebtMessage">
+                        計測されたスコアに応じて負債が自動返済されました！
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-center">
+                        <div class="flex items-center space-x-2 text-slate-400 text-xs mb-1">
+                            <i class="fa-solid fa-stopwatch text-brand-400"></i>
+                            <span>合計睡眠時間</span>
+                        </div>
+                        <p class="text-2xl font-bold text-white" id="reportDuration">0時間0分</p>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-center">
+                        <div class="flex items-center space-x-2 text-slate-400 text-xs mb-1">
+                            <i class="fa-solid fa-bed text-indigo-400"></i>
+                            <span>就寝時刻 (JST)</span>
+                        </div>
+                        <p class="text-sm font-semibold font-mono text-slate-100" id="reportBedtimeJst">----/--/-- --:--:-- (JST)</p>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-center">
+                        <div class="flex items-center space-x-2 text-slate-400 text-xs mb-1">
+                            <i class="fa-solid fa-sun text-amber-400"></i>
+                            <span>起床時刻 (JST)</span>
+                        </div>
+                        <p class="text-sm font-semibold font-mono text-slate-100" id="reportWakeTimeJst">----/--/-- --:--:-- (JST)</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">睡眠ステージ構成比</h3>
+                    
+                    <div class="w-full bg-slate-950 h-3.5 rounded-full overflow-hidden flex">
+                        <div id="barDeep" class="bg-indigo-600 h-full transition-all" style="width: 0%" title="深い睡眠"></div>
+                        <div id="barLight" class="bg-brand-400 h-full transition-all" style="width: 0%" title="浅い睡眠"></div>
+                        <div id="barRem" class="bg-accent-teal h-full transition-all" style="width: 0%" title="REM睡眠"></div>
+                        <div id="barAwake" class="bg-rose-500 h-full transition-all" style="width: 0%" title="覚醒"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                        <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 text-center">
+                            <div class="flex items-center justify-center space-x-1.5 text-xs text-slate-400 mb-0.5">
+                                <span class="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
+                                <span>深い睡眠</span>
+                            </div>
+                            <p class="text-base font-bold text-white" id="pctDeep">0%</p>
+                        </div>
+                        <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 text-center">
+                            <div class="flex items-center justify-center space-x-1.5 text-xs text-slate-400 mb-0.5">
+                                <span class="w-2 h-2 rounded-full bg-brand-400 inline-block"></span>
+                                <span>浅い睡眠</span>
+                            </div>
+                            <p class="text-base font-bold text-white" id="pctLight">0%</p>
+                        </div>
+                        <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 text-center">
+                            <div class="flex items-center justify-center space-x-1.5 text-xs text-slate-400 mb-0.5">
+                                <span class="w-2 h-2 rounded-full bg-accent-teal inline-block"></span>
+                                <span>REM睡眠</span>
+                            </div>
+                            <p class="text-base font-bold text-white" id="pctRem">0%</p>
+                        </div>
+                        <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 text-center">
+                            <div class="flex items-center justify-center space-x-1.5 text-xs text-slate-400 mb-0.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                                <span>覚醒</span>
+                            </div>
+                            <p class="text-base font-bold text-white" id="pctAwake">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-3">
+                <button onclick="exportJSON()" class="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-100 text-sm font-semibold rounded-2xl border border-slate-700 shadow-md flex items-center justify-center space-x-2 transition cursor-pointer">
+                    <i class="fa-solid fa-download text-brand-400"></i>
+                    <span>全詳細データをJSON保存</span>
+                </button>
+
+                <button onclick="resetApp()" class="w-full sm:w-auto px-6 py-3.5 bg-brand-600 hover:bg-brand-500 active:scale-98 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
+                    <i class="fa-solid fa-bed text-lg"></i>
+                    <span>計測を開始する</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-900 bg-slate-950 py-4 px-4 text-center text-xs text-slate-500">
+        <p>© 2026 SleepPulse AI • Local & Privacy First Sleep Analytics</p>
+    </footer>
+
+    <!-- JS Logic -->
+    <script>
+        // ==================== Cloudflare Worker 設定 ====================
+        // ここをご自身の Cloudflare Worker の URL に書き換えてください。
+        const CLOUDFLARE_WORKER_URL = "https://your-worker-subdomain.workers.dev/api/sleep";
+
+        // --- LocalStorage キー ---
+        const STORAGE_KEY_SURVEY = "sleeppulse_survey_data";
+        const STORAGE_KEY_DEBT = "sleeppulse_current_debt_minutes";
+
+        // --- アンケート状態データ ---
+        let currentAge = 30;
+        let savedSurveyData = null;
+
+        // --- SleepDetect2 状態データ ---
+        let wakeLock = null;
+        let audioCtx = null;
+        let analyser = null;
+        let micStream = null;
+        let timerInterval = null;
+        let sampleInterval = null;
+
+        let startTime = null;
+        let endTime = null;
+        let bedtimeJstStr = "";
+        let wakeTimeJstStr = "";
+
+        let currentAccelMag = 0;
+        let currentDecibels = 0;
+        let snoreCount = 0;
+        let awakeningCount = 0;
+        let timelineData = [];
+
+        let lastStage = "Awake";
+        let silentPeriodCount = 0;
+
+        window.addEventListener('load', () => {
+            initTimeOptions();
+            checkCapabilities();
+            initUnlockGesture();
+            loadSavedData();
+        });
+
+        // 保存データの復元読み込み
+        function loadSavedData() {
+            const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
+            const storedSurvey = localStorage.getItem(STORAGE_KEY_SURVEY);
+
+            if (storedSurvey) {
+                try {
+                    savedSurveyData = JSON.parse(storedSurvey);
+                } catch (e) {
+                    console.error("Failed to parse stored survey data", e);
+                }
+            }
+
+            if (storedDebt !== null) {
+                const debtMin = parseInt(storedDebt, 10);
+                if (!isNaN(debtMin)) {
+                    document.getElementById('savedDebtBanner').classList.remove('hidden');
+                    document.getElementById('savedDebtText').textContent = formatDurationText(debtMin);
+                    if (savedSurveyData) {
+                        savedSurveyData.currentDebtMinutes = debtMin;
+                    }
+                }
+            }
+        }
+
+        // 保存された負債記録のリセット
+        function clearSavedDebt() {
+            if (confirm("これまでの睡眠負債の減額記録をリセットして最初から診断し直しますか？")) {
+                localStorage.removeItem(STORAGE_KEY_DEBT);
+                localStorage.removeItem(STORAGE_KEY_SURVEY);
+                savedSurveyData = null;
+                document.getElementById('savedDebtBanner').classList.add('hidden');
+                alert("記録をリセットしました。");
+            }
+        }
+
+        // ==================== Cloudflare データ送信処理 ====================
+        async function sendDataToCloudflare(payload) {
+            const statusBox = document.getElementById('cfStatusBox');
+            const statusIcon = document.getElementById('cfStatusIcon');
+            const statusText = document.getElementById('cfStatusText');
+
+            if (!CLOUDFLARE_WORKER_URL || CLOUDFLARE_WORKER_URL.includes('your-worker-subdomain')) {
+                console.log('Cloudflare Worker URL が未設定のため、デモモードで処理します。');
+                return;
+            }
+
+            statusBox.classList.remove('hidden');
+            statusBox.className = "rounded-xl p-3 border text-xs flex items-center justify-between bg-brand-950/40 border-brand-500/30 text-brand-300";
+            statusIcon.className = "fa-solid fa-spinner animate-spin text-sm";
+            statusText.textContent = "Cloudflare にデータを送信中...";
+
+            try {
+                const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    statusBox.className = "rounded-xl p-3 border text-xs flex items-center justify-between bg-emerald-950/40 border-emerald-500/30 text-emerald-300";
+                    statusIcon.className = "fa-solid fa-cloud-check text-sm";
+                    statusText.textContent = "Cloudflare にデータを正常に送信・同期しました";
+                } else {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+            } catch (err) {
+                console.error("Cloudflare send error: ", err);
+                statusBox.className = "rounded-xl p-3 border text-xs flex items-center justify-between bg-amber-950/40 border-amber-500/30 text-amber-300";
+                statusIcon.className = "fa-solid fa-triangle-exclamation text-sm";
+                statusText.textContent = "Cloudflare への送信に失敗しました（ローカル記録は保存されています）";
+            }
+        }
+
+        // ==================== アンケート処理 ====================
+        function getIdealData(age) {
+            if (age <= 1) {
+                return { min: 720, max: 900, rangeText: "12〜15時間", label: "0~1歳 (乳幼児)", sugSleep: "19:00〜20:00", sugWake: "07:00〜08:00" };
+            }
+            if (age <= 5) {
+                return { min: 600, max: 780, rangeText: "10〜13時間", label: "2~5歳 (幼児)", sugSleep: "20:00〜21:00", sugWake: "07:00〜08:00" };
+            }
+            if (age <= 13) {
+                return { min: 540, max: 660, rangeText: "9〜11時間", label: "6~13歳 (小学生)", sugSleep: "21:00〜21:30", sugWake: "06:30〜07:00" };
+            }
+            if (age <= 17) {
+                return { min: 480, max: 600, rangeText: "8〜10時間", label: "14~17歳 (10代)", sugSleep: "22:00〜23:00", sugWake: "06:30〜07:00" };
+            }
+            if (age <= 64) {
+                return { min: 420, max: 540, rangeText: "7〜9時間", label: "18~64歳 (成人)", sugSleep: "22:00〜23:30", sugWake: "06:00〜07:00" };
+            }
+            return { min: 420, max: 480, rangeText: "7〜8時間", label: "65歳~ (シニア)", sugSleep: "21:30〜22:30", sugWake: "05:30〜06:30" };
+        }
+
+        function initTimeOptions() {
+            const sleepSel = document.getElementById('sleepSelect');
+            const wakeSel = document.getElementById('wakeSelect');
+            sleepSel.innerHTML = '';
+            wakeSel.innerHTML = '';
+
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 5) {
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    const totalMin = h * 60 + m;
+
+                    const opt1 = new Option(`${hh}:${mm}`, totalMin);
+                    const opt2 = new Option(`${hh}:${mm}`, totalMin);
+
+                    sleepSel.add(opt1);
+                    wakeSel.add(opt2);
+                }
+            }
+
+            sleepSel.value = 23 * 60;
+            wakeSel.value = 7 * 60;
+            updateCalculations();
+        }
+
+        function formatMinTo24H(minutes) {
+            const norm = (minutes + 1440) % 1440;
+            const h = String(Math.floor(norm / 60)).padStart(2, '0');
+            const m = String(norm % 60).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        function formatDurationText(totalMins) {
+            const hours = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            if (hours === 0) return `${mins}分`;
+            return `${hours}時間${mins > 0 ? mins + '分' : ''}`;
+        }
+
+        function calculateSleepDurationMinutes(sleepMin, wakeMin) {
+            let diff = wakeMin - sleepMin;
+            if (diff <= 0) {
+                diff += 1440;
+            }
+            return diff;
+        }
+
+        function isInvertedSchedule(sleepMin, wakeMin) {
+            const isSleepInverted = (sleepMin >= 120 && sleepMin <= 600);
+            const isWakeInverted = (wakeMin >= 720 && wakeMin <= 1080);
+            return isSleepInverted || isWakeInverted;
+        }
+
+        function updateCalculations() {
+            const sleepMin = parseInt(document.getElementById('sleepSelect').value);
+            const wakeMin = parseInt(document.getElementById('wakeSelect').value);
+
+            document.getElementById('sleepDisplay').textContent = formatMinTo24H(sleepMin);
+            document.getElementById('wakeDisplay').textContent = formatMinTo24H(wakeMin);
+
+            const diff = calculateSleepDurationMinutes(sleepMin, wakeMin);
+            document.getElementById('durationDisplay').textContent = formatDurationText(diff);
+        }
+
+        function adjustTime(selectId, deltaMinutes) {
+            const sel = document.getElementById(selectId);
+            let curVal = parseInt(sel.value);
+            let newVal = (curVal + deltaMinutes + 1440) % 1440;
+            sel.value = Math.round(newVal / 5) * 5 % 1440;
+            updateCalculations();
+        }
+
+        function setAge(val) {
+            currentAge = Math.max(0, Math.min(100, val));
+            document.getElementById('ageVal').textContent = currentAge;
+            document.getElementById('ageSlider').value = currentAge;
+            updateCalculations();
+        }
+
+        function adjustAge(delta) {
+            setAge(currentAge + delta);
+        }
+
+        function saveAndShowResults() {
+            const sleepMin = parseInt(document.getElementById('sleepSelect').value);
+            const wakeMin = parseInt(document.getElementById('wakeSelect').value);
+            
+            const actualDiffMin = calculateSleepDurationMinutes(sleepMin, wakeMin);
+            const ideal = getIdealData(currentAge);
+
+            const q1 = parseInt(document.getElementById('qDayDrowsiness').value);
+            const q2 = parseInt(document.getElementById('qHolidaySleep').value);
+            const q3 = parseInt(document.getElementById('qWakeQuality').value);
+            const daysContinued = Math.max(1, parseInt(document.getElementById('qDaysContinued').value) || 1);
+
+            const idealAvgMin = (ideal.min + ideal.max) / 2;
+            const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
+            const initialDebtMinutes = (q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued);
+
+            // 前回の睡眠負債がLocalStorageに保存されていればそれを引き継ぎ、無ければ初期診断値を適用
+            const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
+            let effectiveCurrentDebt = initialDebtMinutes;
+
+            if (storedDebt !== null) {
+                const parsedDebt = parseInt(storedDebt, 10);
+                if (!isNaN(parsedDebt)) {
+                    effectiveCurrentDebt = parsedDebt;
+                }
+            } else {
+                localStorage.setItem(STORAGE_KEY_DEBT, initialDebtMinutes);
+            }
+
+            const heroBox = document.getElementById('diffHeroBox');
+            const heroTitle = document.getElementById('diffHeroTitle');
+            const heroVal = document.getElementById('diffHeroValue');
+
+            if (actualDiffMin < ideal.min) {
+                const shortage = ideal.min - actualDiffMin;
+                heroBox.className = "rounded-2xl p-4 text-center border bg-amber-950/30 border-amber-500/40 text-amber-300";
+                heroTitle.textContent = "理想の下限時間との差";
+                heroVal.textContent = `理想より -${formatDurationText(shortage)}`;
+            } else if (actualDiffMin > ideal.max) {
+                const surplus = actualDiffMin - ideal.max;
+                heroBox.className = "rounded-2xl p-4 text-center border bg-amber-950/30 border-amber-500/40 text-amber-300";
+                heroTitle.textContent = "理想の上限時間との差";
+                heroVal.textContent = `理想より +${formatDurationText(surplus)}`;
+            } else {
+                heroBox.className = "rounded-2xl p-4 text-center border bg-emerald-950/30 border-emerald-500/40 text-emerald-300";
+                heroTitle.textContent = "理想の範囲との差";
+                heroVal.textContent = "理想の範囲内です ✨";
+            }
+
+            const warningCard = document.getElementById('warningCard');
+            if (isInvertedSchedule(sleepMin, wakeMin)) {
+                warningCard.classList.remove('hidden');
+                document.getElementById('sugSleep').textContent = ideal.sugSleep;
+                document.getElementById('sugWake').textContent = ideal.sugWake;
+            } else {
+                warningCard.classList.add('hidden');
+            }
+
+            document.getElementById('resAgeText').textContent = `${currentAge}歳の睡眠設定データ`;
+            document.getElementById('resActualTime').textContent = formatDurationText(actualDiffMin);
+            document.getElementById('resCategoryName').textContent = ideal.label;
+            document.getElementById('resIdealRange').textContent = ideal.rangeText;
+            document.getElementById('resSleepTime').textContent = formatMinTo24H(sleepMin);
+            document.getElementById('resWakeTime').textContent = formatMinTo24H(wakeMin);
+            
+            // 負債時間表示の更新（引き継がれた残高）
+            document.getElementById('resDebtTime').textContent = formatDurationText(effectiveCurrentDebt);
+
+            savedSurveyData = {
+                age: currentAge,
+                sleepTime: formatMinTo24H(sleepMin),
+                wakeTime: formatMinTo24H(wakeMin),
+                actualMinutes: actualDiffMin,
+                idealMinMinutes: ideal.min,
+                idealMaxMinutes: ideal.max,
+                idealAvgMinutes: idealAvgMin,
+                daysContinued: daysContinued,
+                idealRangeText: ideal.rangeText,
+                isInverted: isInvertedSchedule(sleepMin, wakeMin),
+                initialDebtMinutes: initialDebtMinutes,
+                currentDebtMinutes: effectiveCurrentDebt
+            };
+
+            localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
+
+            // アプリ連携用送信
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.sleepHandler) {
+                window.webkit.messageHandlers.sleepHandler.postMessage(savedSurveyData);
+            }
+            if (window.AndroidInterface && typeof window.AndroidInterface.sendSleepResult === 'function') {
+                window.AndroidInterface.sendSleepResult(JSON.stringify(savedSurveyData));
+            }
+
+            // 画面切替
+            document.getElementById('surveyInputScreen').classList.add('hidden');
+            document.getElementById('surveyResultScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToInput() {
+            loadSavedData();
+            document.getElementById('surveyResultScreen').classList.add('hidden');
+            document.getElementById('surveyInputScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function proceedToSleepDetect() {
+            document.getElementById('surveyResultScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToSurveyResult() {
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('surveyResultScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ==================== SleepDetect2 処理 ====================
+        function formatJST(dateObj) {
+            if (!dateObj) return "";
+            const formatter = new Intl.DateTimeFormat('ja-JP', {
+                timeZone: 'Asia/Tokyo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+
+            const parts = formatter.formatToParts(dateObj);
+            const p = {};
+            parts.forEach(part => { p[part.type] = part.value; });
+
+            return `${p.year}/${p.month}/${p.day} ${p.hour}:${p.minute}:${p.second} (JST)`;
+        }
+
+        function checkCapabilities() {
+            const statusWakeLock = document.getElementById('statusWakeLock');
+            if ('wakeLock' in navigator) {
+                statusWakeLock.textContent = '対応完了';
+                statusWakeLock.classList.add('text-emerald-400');
+            } else {
+                statusWakeLock.textContent = '非対応 (画面減光で対応)';
+                statusWakeLock.classList.add('text-amber-400');
+            }
+        }
+
+        async function startSleepTracking() {
+            try {
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                    const permissionState = await DeviceMotionEvent.requestPermission();
+                    if (permissionState !== 'granted') {
+                        alert('加速度センサーへのアクセスが許可されませんでした。');
+                        return;
+                    }
+                }
+
+                window.addEventListener('devicemotion', handleMotion, true);
+                document.getElementById('statusAccel').textContent = '接続済み';
+                document.getElementById('statusAccel').classList.add('text-emerald-400');
+
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512;
+                const source = audioCtx.createMediaStreamSource(micStream);
+                source.connect(analyser);
+
+                document.getElementById('statusMic').textContent = 'マイクアクティブ';
+                document.getElementById('statusMic').classList.add('text-emerald-400');
+
+                requestWakeLock();
+
+                startTime = new Date();
+                bedtimeJstStr = formatJST(startTime);
+
+                snoreCount = 0;
+                awakeningCount = 0;
+                timelineData = [];
+                lastStage = "Awake";
+
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('trackingScreen').classList.remove('hidden');
+                document.getElementById('statusBadge').classList.remove('hidden');
+                document.getElementById('globalStatusDot').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                document.getElementById('globalStatusText').textContent = '記録中';
+
+                document.getElementById('liveStartTimeJst').textContent = `就寝時刻: ${bedtimeJstStr}`;
+
+                timerInterval = setInterval(updateLiveTimer, 1000);
+                sampleInterval = setInterval(processAudioAndMotionSample, 2000);
+
+            } catch (err) {
+                console.error("Initialization error: ", err);
+                alert("センサーまたはマイクの起動に失敗しました: " + err.message);
+            }
+        }
+
+        function handleMotion(event) {
+            const acc = event.accelerationIncludingGravity || event.acceleration;
+            if (!acc) return;
+            const x = acc.x || 0;
+            const y = acc.y || 0;
+            const z = acc.z || 0;
+
+            const mag = Math.abs(Math.sqrt(x*x + y*y + z*z) - 9.8);
+            currentAccelMag = currentAccelMag * 0.7 + mag * 0.3;
+        }
+
+        function processAudioAndMotionSample() {
+            if (!analyser) return;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                sum += dataArray[i];
+            }
+            const avg = sum / bufferLength;
+            currentDecibels = Math.round(avg * 0.8);
+
+            document.getElementById('valMovement').textContent = currentAccelMag.toFixed(2);
+            document.getElementById('barMovement').style.width = Math.min(100, currentAccelMag * 50) + '%';
+
+            document.getElementById('valDecibels').textContent = `${currentDecibels} dB`;
+            document.getElementById('barDecibels').style.width = Math.min(100, currentDecibels * 1.2) + '%';
+
+            if (currentDecibels > 42 && currentAccelMag < 0.2) {
+                snoreCount++;
+            }
+
+            let stage = "Deep";
+            if (currentAccelMag > 1.2) {
+                stage = "Awake";
+                if (lastStage !== "Awake") awakeningCount++;
+            } else if (currentAccelMag > 0.4 || currentDecibels > 35) {
+                stage = "Light";
+            } else if (currentAccelMag < 0.15 && currentDecibels < 15) {
+                silentPeriodCount++;
+                stage = (silentPeriodCount % 4 === 0) ? "REM" : "Deep";
+            } else {
+                stage = "Light";
+            }
+
+            lastStage = stage;
+
+            timelineData.push({
+                timestamp: new Date().toISOString(),
+                jst_time: formatJST(new Date()),
+                movement: parseFloat(currentAccelMag.toFixed(3)),
+                decibels: currentDecibels,
+                sleep_stage: stage
+            });
+        }
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.warn(`Wake Lock Request Failed: ${err.message}`);
+                }
+            }
+        }
+
+        function updateLiveTimer() {
+            if (!startTime) return;
+            const diffMs = new Date() - startTime;
+            const secs = Math.floor((diffMs / 1000) % 60);
+            const mins = Math.floor((diffMs / (1000 * 60)) % 60);
+            const hrs = Math.floor(diffMs / (1000 * 60 * 60));
+
+            document.getElementById('liveTimer').textContent = 
+                `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function enableOledSaver() {
+            document.getElementById('oledOverlay').classList.remove('hidden');
+            document.getElementById('oledOverlay').classList.add('flex');
+        }
+
+        let unlockTimer = null;
+        let unlockProgress = 0;
+
+        function initUnlockGesture() {
+            const overlay = document.getElementById('oledOverlay');
+            const progress = document.getElementById('unlockProgress');
+
+            const startUnlock = () => {
+                unlockProgress = 0;
+                unlockTimer = setInterval(() => {
+                    unlockProgress += 10;
+                    progress.style.width = unlockProgress + '%';
+                    if (unlockProgress >= 100) {
+                        clearInterval(unlockTimer);
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                        progress.style.width = '0%';
+                    }
+                }, 100);
+            };
+
+            const cancelUnlock = () => {
+                if (unlockTimer) clearInterval(unlockTimer);
+                unlockProgress = 0;
+                progress.style.width = '0%';
+            };
+
+            overlay.addEventListener('mousedown', startUnlock);
+            overlay.addEventListener('mouseup', cancelUnlock);
+            overlay.addEventListener('touchstart', startUnlock);
+            overlay.addEventListener('touchend', cancelUnlock);
+        }
+
+        function stopSleepTracking() {
+            endTime = new Date();
+            wakeTimeJstStr = formatJST(endTime);
+
+            clearInterval(timerInterval);
+            clearInterval(sampleInterval);
+            window.removeEventListener('devicemotion', handleMotion, true);
+
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+            }
+            if (audioCtx) {
+                audioCtx.close();
+            }
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+
+            const durationMs = endTime - startTime;
+            const totalMins = Math.max(1, Math.floor(durationMs / (1000 * 60)));
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+
+            let countDeep = 0, countLight = 0, countRem = 0, countAwake = 0;
+            timelineData.forEach(d => {
+                if (d.sleep_stage === 'Deep') countDeep++;
+                else if (d.sleep_stage === 'Light') countLight++;
+                else if (d.sleep_stage === 'REM') countRem++;
+                else countAwake++;
+            });
+
+            const totalSamples = timelineData.length || 1;
+            const pctDeepVal = Math.round((countDeep / totalSamples) * 100);
+            const pctLightVal = Math.round((countLight / totalSamples) * 100);
+            const pctRemVal = Math.round((countRem / totalSamples) * 100);
+            const pctAwakeVal = Math.round((countAwake / totalSamples) * 100);
+
+            let score = 85;
+            if (totalMins < 360) score -= 15;
+            if (awakeningCount > 3) score -= (awakeningCount * 3);
+            if (snoreCount > 20) score -= 10;
+            score = Math.max(20, Math.min(100, score));
+
+            // 計測スコアに応じた睡眠負債の返済計算
+            let repaidDebt = 0;
+            if (score >= 60) {
+                repaidDebt = Math.round(totalMins * (score / 100));
+            } else {
+                repaidDebt = 0;
+            }
+
+            // 前回の睡眠負債を引き継ぎ、今回分を差し引く（どんどん減らせるように永続保持）
+            let prevDebt = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
+            let remainingDebt = Math.max(0, prevDebt - repaidDebt);
+
+            if (savedSurveyData) {
+                savedSurveyData.currentDebtMinutes = remainingDebt;
+            }
+
+            // LocalStorage へ差し引き後の負債を上書き保存
+            localStorage.setItem(STORAGE_KEY_DEBT, remainingDebt);
+            if (savedSurveyData) {
+                localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
+            }
+
+            // 表示の更新
+            document.getElementById('reportDuration').textContent = `${hrs}時間${mins}分`;
+            document.getElementById('reportBedtimeJst').textContent = bedtimeJstStr;
+            document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
+            document.getElementById('reportScore').textContent = score;
+
+            document.getElementById('reportRepaidDebt').textContent = `-${formatDurationText(repaidDebt)}`;
+            document.getElementById('reportRemainingDebt').textContent = formatDurationText(remainingDebt);
+
+            const debtMsg = document.getElementById('reportDebtMessage');
+            if (remainingDebt === 0) {
+                debtMsg.innerHTML = "🎉 <strong>おめでとうございます！睡眠負債（借金）を完済しました！</strong> この調子で良い睡眠習慣を維持しましょう。";
+            } else if (repaidDebt > 0) {
+                debtMsg.innerHTML = `今回の睡眠で <strong>${formatDurationText(repaidDebt)}</strong> の負債を返済しました！完済まであと ${formatDurationText(remainingDebt)} です。`;
+            } else {
+                debtMsg.innerHTML = "睡眠スコアが低かったため、今回は負債を返済できませんでした。次回はより良い睡眠環境を整えましょう。";
+            }
+
+            document.getElementById('pctDeep').textContent = `${pctDeepVal}%`;
+            document.getElementById('pctLight').textContent = `${pctLightVal}%`;
+            document.getElementById('pctRem').textContent = `${pctRemVal}%`;
+            document.getElementById('pctAwake').textContent = `${pctAwakeVal}%`;
+
+            document.getElementById('barDeep').style.width = `${pctDeepVal}%`;
+            document.getElementById('barLight').style.width = `${pctLightVal}%`;
+            document.getElementById('barRem').style.width = `${pctRemVal}%`;
+            document.getElementById('barAwake').style.width = `${pctAwakeVal}%`;
+
+            document.getElementById('trackingScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.remove('hidden');
+            document.getElementById('globalStatusDot').className = 'w-2 h-2 rounded-full bg-slate-500';
+            document.getElementById('globalStatusText').textContent = '解析完了';
+
+            // Cloudflare Worker への自動データ送信実行
+            const payload = {
+                app: "SleepPulse AI",
+                version: "2.2.0",
+                survey_target: savedSurveyData,
+                session: {
+                    bedtime_jst: bedtimeJstStr,
+                    wake_time_jst: wakeTimeJstStr,
+                    iso_start: startTime ? startTime.toISOString() : null,
+                    iso_end: endTime ? endTime.toISOString() : null,
+                    total_duration_minutes: totalMins,
+                    sleep_score: score,
+                    repaid_debt_minutes: repaidDebt,
+                    remaining_debt_minutes: remainingDebt,
+                    snore_count: snoreCount,
+                    awakening_count: awakeningCount,
+                    timeline: timelineData
+                }
+            };
+            sendDataToCloudflare(payload);
+        }
+
+        function exportJSON() {
+            const reportData = {
+                app: "SleepPulse AI",
+                version: "2.2.0",
+                survey_target: savedSurveyData,
+                session: {
+                    bedtime_jst: bedtimeJstStr,
+                    wake_time_jst: wakeTimeJstStr,
+                    iso_start: startTime ? startTime.toISOString() : null,
+                    iso_end: endTime ? endTime.toISOString() : null,
+                    total_duration_minutes: Math.floor((endTime - startTime) / (1000 * 60)),
+                    snore_count: snoreCount,
+                    awakening_count: awakeningCount,
+                    timeline: timelineData
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sleep_report_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function resetApp() {
+            loadSavedData();
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('surveyInputScreen').classList.remove('hidden');
+            document.getElementById('statusBadge').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
