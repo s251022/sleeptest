@@ -577,7 +577,7 @@
                     <span>全詳細データをJSON保存</span>
                 </button>
 
-                <button onclick="resetApp()" class="w-full sm:w-auto px-6 py-3.5 bg-brand-600 hover:bg-brand-500 active:scale-98 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
+                <button onclick="goToSetupScreen()" class="w-full sm:w-auto px-6 py-3.5 bg-brand-600 hover:bg-brand-500 active:scale-98 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
                     <i class="fa-solid fa-bed text-lg"></i>
                     <span>計測を開始する</span>
                 </button>
@@ -930,6 +930,13 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // 解析報告画面から計測準備画面へ遷移する処理
+        function goToSetupScreen() {
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         // ==================== SleepDetect2 処理 ====================
         function formatJST(dateObj) {
             if (!dateObj) return "";
@@ -997,6 +1004,7 @@
                 lastStage = "Awake";
 
                 document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('reportScreen').classList.add('hidden');
                 document.getElementById('trackingScreen').classList.remove('hidden');
                 document.getElementById('statusBadge').classList.remove('hidden');
                 document.getElementById('globalStatusDot').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
