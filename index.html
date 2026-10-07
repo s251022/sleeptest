@@ -768,9 +768,9 @@
             return `${hours}時間${mins > 0 ? mins + '分' : ''}`;
         }
 
-        // 金額（円）のフォーマット用関数
+        // 金額（円）のフォーマット用関数（絶対値を用いてマイナス記号「-」を除去）
         function formatYen(amount) {
-            return `${Number(amount).toLocaleString()}円`;
+            return `${Math.abs(Number(amount)).toLocaleString()}円`;
         }
 
         function calculateSleepDurationMinutes(sleepMin, wakeMin) {
@@ -832,7 +832,7 @@
             const idealAvgMin = (ideal.min + ideal.max) / 2;
             const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
 
-            // 負債を -(時間) として処理（マイナス値として保持）
+            // 負債を -(時間) として処理（内部的にはマイナス値として保持）
             const initialDebtMinutes = -((q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued));
 
             // 前回の睡眠負債がLocalStorageに保存されていればそれを引き継ぎ、無ければ初期診断値を適用
@@ -1218,9 +1218,8 @@
             document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
             document.getElementById('reportScore').textContent = score;
 
-            // 返済額は - を付けずに表記
+            // 返済額および残りの負債（符号なし）の出力
             document.getElementById('reportRepaidDebt').textContent = formatYen(repaidDebt);
-            // 負債はマイナス表記のまま出力
             document.getElementById('reportRemainingDebt').textContent = formatYen(remainingDebt);
 
             const debtMsg = document.getElementById('reportDebtMessage');
