@@ -489,7 +489,7 @@
                     <div class="grid grid-cols-2 gap-3 text-center">
                         <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
                             <span class="text-[10px] text-slate-400 font-semibold block">今回の返済額 (減額)</span>
-                            <span class="text-xl font-extrabold text-emerald-400 font-mono" id="reportRepaidDebt">-0円</span>
+                            <span class="text-xl font-extrabold text-emerald-400 font-mono" id="reportRepaidDebt">0円</span>
                         </div>
                         <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
                             <span class="text-[10px] text-slate-400 font-semibold block">残りの睡眠負債</span>
@@ -831,7 +831,9 @@
 
             const idealAvgMin = (ideal.min + ideal.max) / 2;
             const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
-            const initialDebtMinutes = (q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued);
+
+            // 負債を -(時間) として処理（マイナス値として保持）
+            const initialDebtMinutes = -((q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued));
 
             // 前回の睡眠負債がLocalStorageに保存されていればそれを引き継ぎ、無ければ初期診断値を適用
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
@@ -1188,7 +1190,7 @@
             if (snoreCount > 20) score -= 10;
             score = Math.max(20, Math.min(100, score));
 
-            // 計測スコアに応じた睡眠負債の返済計算
+            // 計測スコアに応じた睡眠負債の返済計算（返済額は正の値）
             let repaidDebt = 0;
             if (score >= 60) {
                 repaidDebt = Math.round(totalMins * (score / 100));
@@ -1196,15 +1198,15 @@
                 repaidDebt = 0;
             }
 
-            // 前回の睡眠負債を引き継ぎ、今回分を差し引く（どんどん減らせるように永続保持）
+            // 前回の睡眠負債（マイナスの値）に返済額を加算（0を目指す）
             let prevDebt = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
-            let remainingDebt = Math.max(0, prevDebt - repaidDebt);
+            let remainingDebt = Math.min(0, prevDebt + repaidDebt);
 
             if (savedSurveyData) {
                 savedSurveyData.currentDebtMinutes = remainingDebt;
             }
 
-            // LocalStorage へ差し引き後の負債を上書き保存
+            // LocalStorage へ加算後の負債を保存
             localStorage.setItem(STORAGE_KEY_DEBT, remainingDebt);
             if (savedSurveyData) {
                 localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
@@ -1216,11 +1218,13 @@
             document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
             document.getElementById('reportScore').textContent = score;
 
-            document.getElementById('reportRepaidDebt').textContent = `-${formatYen(repaidDebt)}`;
+            // 返済額は - を付けずに表記
+            document.getElementById('reportRepaidDebt').textContent = formatYen(repaidDebt);
+            // 負債はマイナス表記のまま出力
             document.getElementById('reportRemainingDebt').textContent = formatYen(remainingDebt);
 
             const debtMsg = document.getElementById('reportDebtMessage');
-            if (remainingDebt === 0) {
+            if (remainingDebt >= 0) {
                 debtMsg.innerHTML = "🎉 <strong>おめでとうございます！睡眠負債（借金）を完済しました！</strong> この調子で良い睡眠習慣を維持しましょう。";
             } else if (repaidDebt > 0) {
                 debtMsg.innerHTML = `今回の睡眠で <strong>${formatYen(repaidDebt)}</strong> の負債を返済しました！完済まであと ${formatYen(remainingDebt)} です。`;
