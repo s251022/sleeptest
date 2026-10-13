@@ -1184,7 +1184,7 @@
             const pctRemVal = Math.round((countRem / totalSamples) * 100);
             const pctAwakeVal = Math.round((countAwake / totalSamples) * 100);
 
-            let score = 85;
+            let score = 100;
             if (totalMins < 360) score -= 15;
             if (awakeningCount > 3) score -= (awakeningCount * 3);
             if (snoreCount > 20) score -= 10;
