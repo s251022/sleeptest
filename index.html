@@ -76,11 +76,11 @@
             <span>アカウント: <strong id="userStatusText" class="text-amber-400">未ログイン (登録が必要です)</strong></span>
         </div>
         <div class="flex items-center space-x-2">
-            <button id="btnMyPage" onclick="openMyPage()" class="hidden px-3 py-1 bg-slate-800 hover:bg-slate-700 text-brand-300 border border-brand-500/30 rounded-lg font-bold transition flex items-center space-x-1">
+            <button id="btnMyPage" onclick="openMyPage()" class="hidden px-3 py-1 bg-slate-800 hover:bg-slate-700 text-brand-300 border border-brand-500/30 rounded-lg font-bold transition flex items-center space-x-1 cursor-pointer">
                 <i class="fa-solid fa-id-card"></i>
                 <span>マイページ</span>
             </button>
-            <button id="authBtn" onclick="openAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition">
+            <button id="authBtn" onclick="openAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition cursor-pointer">
                 ログイン / 新規登録
             </button>
         </div>
@@ -119,10 +119,10 @@
         </div>
     </div>
 
-    <!-- App Header -->
+    <!-- App Header (ロゴのクリック動作を削除) -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
         <div class="max-w-3xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="backToSurveyResult()">
+            <div class="flex items-center space-x-3 select-none">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-teal flex items-center justify-center shadow-lg shadow-brand-500/20">
                     <i class="fa-solid font-bold fa-moon text-white text-lg"></i>
                 </div>
@@ -141,7 +141,7 @@
     <!-- Main Container -->
     <main class="max-w-3xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
 
-        <!-- ==================== STEP 0: マイページ画面 (新規追加) ==================== -->
+        <!-- STEP 0: マイページ画面 -->
         <section id="myPageScreen" class="hidden space-y-6 my-auto py-4">
             <div class="bg-gradient-to-b from-slate-900 to-slate-900/80 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
                 <!-- ユーザーヘッダー -->
@@ -155,7 +155,7 @@
                             <h2 class="text-xl font-extrabold text-white" id="myPageUsername">----</h2>
                         </div>
                     </div>
-                    <button onclick="closeMyPage()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 transition">
+                    <button onclick="closeMyPage()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 transition cursor-pointer">
                         <i class="fa-solid fa-xmark mr-1"></i>閉じる
                     </button>
                 </div>
@@ -192,9 +192,9 @@
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">過去の睡眠計測履歴</h3>
-                        <button onclick="fetchHistoryFromCloudflare()" class="text-xs text-brand-400 hover:text-brand-300 font-bold transition flex items-center space-x-1">
+                        <button onclick="fetchHistoryFromCloudflare()" class="text-xs text-brand-400 hover:text-brand-300 font-bold transition flex items-center space-x-1 cursor-pointer">
                             <i class="fa-solid fa-arrows-rotate"></i>
-                            <span>再読み込み</span>
+                            <span>更新</span>
                         </button>
                     </div>
 
@@ -238,7 +238,7 @@
                     <i class="fa-solid fa-clock-rotate-left text-brand-400 text-base"></i>
                     <span>前回の睡眠負債記録を保持しています: <strong id="savedDebtText" class="text-brand-300 font-mono text-sm">0円</strong></span>
                 </div>
-                <button type="button" onclick="clearSavedDebt()" class="px-2.5 py-1 bg-rose-900/50 hover:bg-rose-800 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] transition">
+                <button type="button" onclick="clearSavedDebt()" class="px-2.5 py-1 bg-rose-900/50 hover:bg-rose-800 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] transition cursor-pointer">
                     リセット
                 </button>
             </div>
@@ -766,8 +766,10 @@
             initUnlockGesture();
             loadSavedData();
             
-            // 未ログイン状態ならモーダルを強制表示
-            if (!checkAuthGuard()) {
+            // ログイン済みならクラウドから最新データを自動取得
+            if (checkAuthGuard()) {
+                syncUserDataFromCloudflare();
+            } else {
                 openAuthModal();
             }
         });
@@ -784,10 +786,7 @@
         function checkAuthGuard() {
             const user = getAuthUser();
             const token = getAuthToken();
-            if (!user || !token) {
-                return false;
-            }
-            return true;
+            return !!(user && token);
         }
 
         function requireAuth(actionCallback) {
@@ -860,6 +859,7 @@
                     localStorage.setItem(STORAGE_KEY_USER, data.username);
                     alert(type === 'register' ? "アカウントを作成してログインしました！" : "ログインしました！");
                     updateAuthUI();
+                    syncUserDataFromCloudflare(); // ログイン成功時にクラウドから負債情報を全同期
                 } else {
                     alert("認証エラー: " + data.error);
                 }
@@ -872,12 +872,52 @@
             if (confirm("ログアウトしますか？未ログイン状態ではアプリを使用できません。")) {
                 localStorage.removeItem(STORAGE_KEY_TOKEN);
                 localStorage.removeItem(STORAGE_KEY_USER);
+                localStorage.removeItem(STORAGE_KEY_DEBT);
+                localStorage.removeItem(STORAGE_KEY_SURVEY);
                 closeMyPage();
                 updateAuthUI();
             }
         }
 
-        // ==================== マイページ機能 (新規追加) ====================
+        // ==================== マルチデバイス負債同期処理 (新規追加) ====================
+        async function syncUserDataFromCloudflare() {
+            const token = getAuthToken();
+            if (!token || !CLOUDFLARE_WORKER_URL || CLOUDFLARE_WORKER_URL.includes('your-worker-subdomain')) return;
+
+            const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
+            try {
+                const res = await fetch(baseUrl + '/api/sleep', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.sessions && data.sessions.length > 0) {
+                        // 最新のセッションデータを抽出して最新負債を取得
+                        const sessions = data.sessions.map(s => s.session || s);
+                        sessions.sort((a, b) => new Date(b.iso_start || b.bedtime_jst) - new Date(a.iso_start || a.bedtime_jst));
+                        const latestSession = sessions[0];
+                        
+                        if (latestSession && typeof latestSession.remaining_debt_minutes !== 'undefined') {
+                            const latestDebt = latestSession.remaining_debt_minutes;
+                            localStorage.setItem(STORAGE_KEY_DEBT, latestDebt);
+                            if (savedSurveyData) {
+                                savedSurveyData.currentDebtMinutes = latestDebt;
+                                localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
+                            }
+                            // UI更新
+                            document.getElementById('savedDebtBanner').classList.remove('hidden');
+                            document.getElementById('savedDebtText').textContent = formatYen(latestDebt);
+                            document.getElementById('resDebtTime').textContent = formatYen(latestDebt);
+                            document.getElementById('myPageCurrentDebt').textContent = formatYen(latestDebt);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Cloudflare 負債データ同期スキップ:", e);
+            }
+        }
+
+        // ==================== マイページ機能 ====================
         function openMyPage() {
             if (!requireAuth()) return;
 
@@ -887,7 +927,6 @@
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT) || "0";
             document.getElementById('myPageCurrentDebt').textContent = formatYen(parseInt(storedDebt, 10));
 
-            // 全画面を隠してマイページのみ表示
             document.getElementById('surveyInputScreen').classList.add('hidden');
             document.getElementById('surveyResultScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.add('hidden');
@@ -897,7 +936,9 @@
             document.getElementById('myPageScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            fetchHistoryFromCloudflare();
+            syncUserDataFromCloudflare().then(() => {
+                fetchHistoryFromCloudflare();
+            });
         }
 
         function closeMyPage() {
@@ -911,14 +952,11 @@
             tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-2"></i>過去データを読み込み中...</td></tr>`;
 
             let sessions = [];
-            
-            // LocalStorage 内のログ履歴を取得
             const localHistStr = localStorage.getItem(STORAGE_KEY_HISTORY);
             if (localHistStr) {
                 try { sessions = JSON.parse(localHistStr); } catch(e) {}
             }
 
-            // Cloudflare API 経由の履歴取得を試みる
             const token = getAuthToken();
             if (token && CLOUDFLARE_WORKER_URL && !CLOUDFLARE_WORKER_URL.includes('your-worker-subdomain')) {
                 const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
@@ -951,7 +989,6 @@
                 return;
             }
 
-            // 日付順（新しい順）に並び替え
             sessions.sort((a, b) => new Date(b.iso_start || b.bedtime_jst) - new Date(a.iso_start || a.bedtime_jst));
 
             let totalScore = 0;
@@ -989,7 +1026,7 @@
                 try { history = JSON.parse(localHistStr); } catch(e) {}
             }
             history.unshift(sessionData);
-            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(0, 50))); // 直近50件保存
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(0, 50)));
         }
 
         // 保存データの復元読み込み
