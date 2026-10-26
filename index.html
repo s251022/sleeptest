@@ -75,7 +75,11 @@
             <i class="fa-solid fa-user-circle text-slate-400 text-sm"></i>
             <span>アカウント: <strong id="userStatusText" class="text-amber-400">未ログイン (登録が必要です)</strong></span>
         </div>
-        <div>
+        <div class="flex items-center space-x-2">
+            <button id="btnMyPage" onclick="openMyPage()" class="hidden px-3 py-1 bg-slate-800 hover:bg-slate-700 text-brand-300 border border-brand-500/30 rounded-lg font-bold transition flex items-center space-x-1">
+                <i class="fa-solid fa-id-card"></i>
+                <span>マイページ</span>
+            </button>
             <button id="authBtn" onclick="openAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition">
                 ログイン / 新規登録
             </button>
@@ -118,7 +122,7 @@
     <!-- App Header -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
         <div class="max-w-3xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="backToSurveyResult()">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-teal flex items-center justify-center shadow-lg shadow-brand-500/20">
                     <i class="fa-solid font-bold fa-moon text-white text-lg"></i>
                 </div>
@@ -136,6 +140,88 @@
 
     <!-- Main Container -->
     <main class="max-w-3xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
+
+        <!-- ==================== STEP 0: マイページ画面 (新規追加) ==================== -->
+        <section id="myPageScreen" class="hidden space-y-6 my-auto py-4">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-900/80 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+                <!-- ユーザーヘッダー -->
+                <div class="flex justify-between items-center border-b border-slate-800/80 pb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-2xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-400 text-2xl">
+                            <i class="fa-solid fa-user-gear"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-slate-400">Account Dashboard</span>
+                            <h2 class="text-xl font-extrabold text-white" id="myPageUsername">----</h2>
+                        </div>
+                    </div>
+                    <button onclick="closeMyPage()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 transition">
+                        <i class="fa-solid fa-xmark mr-1"></i>閉じる
+                    </button>
+                </div>
+
+                <!-- 負債ステータスカード -->
+                <div class="bg-gradient-to-r from-rose-950/80 via-slate-900 to-emerald-950/80 rounded-2xl p-5 text-center border border-slate-800 shadow-lg space-y-2">
+                    <div class="flex justify-center items-center space-x-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-receipt text-rose-400"></i>
+                        <span>現在の睡眠負債（借金）残高</span>
+                    </div>
+                    <div class="text-4xl font-black text-rose-300 font-mono tracking-tight" id="myPageCurrentDebt">0円</div>
+                    <p class="text-xs text-slate-400">
+                        継続的な高スコアの睡眠で負債を減額・完済しましょう！
+                    </p>
+                </div>
+
+                <!-- 過去データのサマリー統計 -->
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">総計測回数</span>
+                        <span class="text-lg font-bold text-white font-mono" id="myPageTotalCount">0 回</span>
+                    </div>
+                    <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">平均スコア</span>
+                        <span class="text-lg font-bold text-brand-400 font-mono" id="myPageAvgScore">-- 点</span>
+                    </div>
+                    <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">累計返済時間</span>
+                        <span class="text-lg font-bold text-emerald-400 font-mono" id="myPageTotalRepaid">0分</span>
+                    </div>
+                </div>
+
+                <!-- 過去の睡眠履歴データ一覧テーブル -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">過去の睡眠計測履歴</h3>
+                        <button onclick="fetchHistoryFromCloudflare()" class="text-xs text-brand-400 hover:text-brand-300 font-bold transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>再読み込み</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
+                        <div class="max-h-60 overflow-y-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-900/90 sticky top-0 text-[10px] text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="py-2.5 px-3">日付 (JST)</th>
+                                        <th class="py-2.5 px-3">時間</th>
+                                        <th class="py-2.5 px-3">スコア</th>
+                                        <th class="py-2.5 px-3 text-right">返済額</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody" class="divide-y divide-slate-800/60">
+                                    <tr>
+                                        <td colspan="4" class="py-6 text-center text-slate-500">
+                                            データを取得中または過去データがありません
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- STEP 1: アンケート入力画面 -->
         <section id="surveyInputScreen" class="space-y-6 my-auto py-4">
@@ -646,6 +732,7 @@
         const STORAGE_KEY_DEBT = "sleeppulse_current_debt_yen";
         const STORAGE_KEY_TOKEN = "sleeppulse_token";
         const STORAGE_KEY_USER = "sleeppulse_username";
+        const STORAGE_KEY_HISTORY = "sleeppulse_local_history";
 
         // --- アンケート状態データ ---
         let currentAge = 30;
@@ -694,7 +781,6 @@
             return localStorage.getItem(STORAGE_KEY_USER);
         }
 
-        // ログイン状態を検証するガード関数（未ログインの場合アラートを表示してモーダルを開く）
         function checkAuthGuard() {
             const user = getAuthUser();
             const token = getAuthToken();
@@ -720,18 +806,21 @@
             const username = getAuthUser();
             const statusText = document.getElementById('userStatusText');
             const authBtn = document.getElementById('authBtn');
+            const myPageBtn = document.getElementById('btnMyPage');
 
             if (username) {
                 statusText.textContent = username;
                 statusText.className = "text-emerald-400 font-bold";
                 authBtn.textContent = "ログアウト";
                 authBtn.onclick = handleLogout;
+                myPageBtn.classList.remove('hidden');
                 closeAuthModal();
             } else {
                 statusText.textContent = "未ログイン (登録が必要です)";
                 statusText.className = "text-amber-400 font-bold";
                 authBtn.textContent = "ログイン / 新規登録";
                 authBtn.onclick = openAuthModal;
+                myPageBtn.classList.add('hidden');
                 openAuthModal();
             }
         }
@@ -783,8 +872,124 @@
             if (confirm("ログアウトしますか？未ログイン状態ではアプリを使用できません。")) {
                 localStorage.removeItem(STORAGE_KEY_TOKEN);
                 localStorage.removeItem(STORAGE_KEY_USER);
+                closeMyPage();
                 updateAuthUI();
             }
+        }
+
+        // ==================== マイページ機能 (新規追加) ====================
+        function openMyPage() {
+            if (!requireAuth()) return;
+
+            const username = getAuthUser() || "Guest";
+            document.getElementById('myPageUsername').textContent = username;
+
+            const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT) || "0";
+            document.getElementById('myPageCurrentDebt').textContent = formatYen(parseInt(storedDebt, 10));
+
+            // 全画面を隠してマイページのみ表示
+            document.getElementById('surveyInputScreen').classList.add('hidden');
+            document.getElementById('surveyResultScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('trackingScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.add('hidden');
+
+            document.getElementById('myPageScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            fetchHistoryFromCloudflare();
+        }
+
+        function closeMyPage() {
+            document.getElementById('myPageScreen').classList.add('hidden');
+            document.getElementById('surveyInputScreen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function fetchHistoryFromCloudflare() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-2"></i>過去データを読み込み中...</td></tr>`;
+
+            let sessions = [];
+            
+            // LocalStorage 内のログ履歴を取得
+            const localHistStr = localStorage.getItem(STORAGE_KEY_HISTORY);
+            if (localHistStr) {
+                try { sessions = JSON.parse(localHistStr); } catch(e) {}
+            }
+
+            // Cloudflare API 経由の履歴取得を試みる
+            const token = getAuthToken();
+            if (token && CLOUDFLARE_WORKER_URL && !CLOUDFLARE_WORKER_URL.includes('your-worker-subdomain')) {
+                const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
+                try {
+                    const res = await fetch(baseUrl + '/api/sleep', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.sessions && Array.isArray(data.sessions)) {
+                            sessions = data.sessions.map(s => s.session || s);
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Cloudflare history fetch failed, fallback to local history.", e);
+                }
+            }
+
+            renderHistoryTable(sessions);
+        }
+
+        function renderHistoryTable(sessions) {
+            const tbody = document.getElementById('historyTableBody');
+
+            if (!sessions || sessions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">まだ計測データが記録されていません</td></tr>`;
+                document.getElementById('myPageTotalCount').textContent = "0 回";
+                document.getElementById('myPageAvgScore').textContent = "-- 点";
+                document.getElementById('myPageTotalRepaid').textContent = "0分";
+                return;
+            }
+
+            // 日付順（新しい順）に並び替え
+            sessions.sort((a, b) => new Date(b.iso_start || b.bedtime_jst) - new Date(a.iso_start || a.bedtime_jst));
+
+            let totalScore = 0;
+            let totalRepaidMins = 0;
+
+            tbody.innerHTML = sessions.map(item => {
+                const score = item.sleep_score || item.score || 0;
+                const repaid = item.repaid_debt_minutes || 0;
+                const durationMins = item.total_duration_minutes || 0;
+                const dateStr = item.bedtime_jst ? item.bedtime_jst.split(' ')[0] : '----/--/--';
+
+                totalScore += score;
+                totalRepaidMins += repaid;
+
+                return `
+                    <tr class="hover:bg-slate-900/60 transition border-b border-slate-800/40">
+                        <td class="py-2.5 px-3 font-mono text-slate-200">${dateStr}</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-400">${formatDurationText(durationMins)}</td>
+                        <td class="py-2.5 px-3 font-bold ${score >= 80 ? 'text-emerald-400' : score >= 60 ? 'text-brand-400' : 'text-rose-400'}">${score} 点</td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">+${formatYen(repaid)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const avgScore = Math.round(totalScore / sessions.length);
+            document.getElementById('myPageTotalCount').textContent = `${sessions.length} 回`;
+            document.getElementById('myPageAvgScore').textContent = `${avgScore} 点`;
+            document.getElementById('myPageTotalRepaid').textContent = `${totalRepaidMins}分`;
+        }
+
+        function saveLocalHistory(sessionData) {
+            let history = [];
+            const localHistStr = localStorage.getItem(STORAGE_KEY_HISTORY);
+            if (localHistStr) {
+                try { history = JSON.parse(localHistStr); } catch(e) {}
+            }
+            history.unshift(sessionData);
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(0, 50))); // 直近50件保存
         }
 
         // 保存データの復元読み込み
@@ -1075,6 +1280,7 @@
 
         function backToInput() {
             loadSavedData();
+            document.getElementById('myPageScreen').classList.add('hidden');
             document.getElementById('surveyResultScreen').classList.add('hidden');
             document.getElementById('surveyInputScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1088,6 +1294,7 @@
         }
 
         function backToSurveyResult() {
+            document.getElementById('myPageScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.add('hidden');
             document.getElementById('surveyResultScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1399,25 +1606,30 @@
             document.getElementById('globalStatusDot').className = 'w-2 h-2 rounded-full bg-slate-500';
             document.getElementById('globalStatusText').textContent = '解析完了';
 
+            // セッションデータの記録
+            const sessionObj = {
+                bedtime_jst: bedtimeJstStr,
+                wake_time_jst: wakeTimeJstStr,
+                iso_start: startTime ? startTime.toISOString() : null,
+                iso_end: endTime ? endTime.toISOString() : null,
+                total_duration_minutes: totalMins,
+                sleep_score: score,
+                repaid_debt_minutes: repaidDebt,
+                remaining_debt_minutes: remainingDebt,
+                snore_count: snoreCount,
+                awakening_count: awakeningCount,
+                timeline: timelineData
+            };
+
+            saveLocalHistory(sessionObj);
+
             // Cloudflare Worker への自動データ送信実行
             const payload = {
                 app: "SleepPulse AI",
-                version: "2.3.0",
+                version: "2.4.0",
                 account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
-                session: {
-                    bedtime_jst: bedtimeJstStr,
-                    wake_time_jst: wakeTimeJstStr,
-                    iso_start: startTime ? startTime.toISOString() : null,
-                    iso_end: endTime ? endTime.toISOString() : null,
-                    total_duration_minutes: totalMins,
-                    sleep_score: score,
-                    repaid_debt_minutes: repaidDebt,
-                    remaining_debt_minutes: remainingDebt,
-                    snore_count: snoreCount,
-                    awakening_count: awakeningCount,
-                    timeline: timelineData
-                }
+                session: sessionObj
             };
             sendDataToCloudflare(payload);
         }
@@ -1425,7 +1637,7 @@
         function exportJSON() {
             const reportData = {
                 app: "SleepPulse AI",
-                version: "2.3.0",
+                version: "2.4.0",
                 account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: {
