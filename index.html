@@ -69,25 +69,31 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- アカウントステータスバー (追加) -->
+    <!-- アカウントステータスバー -->
     <div id="authBar" class="bg-slate-900 border-b border-slate-800 px-4 py-2 text-xs flex justify-between items-center text-slate-300">
         <div id="userInfo" class="flex items-center space-x-2">
             <i class="fa-solid fa-user-circle text-slate-400 text-sm"></i>
-            <span>アカウント: <strong id="userStatusText" class="text-amber-400">未ログイン</strong></span>
+            <span>アカウント: <strong id="userStatusText" class="text-amber-400">未ログイン (登録が必要です)</strong></span>
         </div>
         <div>
-            <button id="authBtn" onclick="toggleAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition">
+            <button id="authBtn" onclick="openAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition">
                 ログイン / 新規登録
             </button>
         </div>
     </div>
 
-    <!-- ログイン / 新規登録 モーダル (追加) -->
-    <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- ログイン / 新規登録 必須モーダル (キャンセル無効) -->
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 class="text-lg font-bold text-white text-center">SleepPulse アカウント認証</h3>
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 mx-auto rounded-2xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400 text-xl mb-2">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">SleepPulse AI へようこそ</h3>
+                <p class="text-xs text-slate-400">アプリの利用にはアカウント登録・ログインが必要です</p>
+            </div>
             
-            <div class="space-y-3">
+            <div class="space-y-3 pt-2">
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">ユーザー名</label>
                     <input type="text" id="authUsername" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" placeholder="user123">
@@ -99,14 +105,11 @@
             </div>
 
             <div class="flex flex-col gap-2 pt-2">
-                <button onclick="handleAuth('login')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl transition">
+                <button onclick="handleAuth('login')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl transition cursor-pointer">
                     ログイン
                 </button>
-                <button onclick="handleAuth('register')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl border border-slate-700 transition">
+                <button onclick="handleAuth('register')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl border border-slate-700 transition cursor-pointer">
                     新規アカウント作成
-                </button>
-                <button onclick="toggleAuthModal()" class="w-full py-1.5 text-xs text-slate-400 hover:text-slate-200">
-                    キャンセル
                 </button>
             </div>
         </div>
@@ -675,16 +678,42 @@
             checkCapabilities();
             initUnlockGesture();
             loadSavedData();
-            updateAuthUI();
+            
+            // 未ログイン状態ならモーダルを強制表示
+            if (!checkAuthGuard()) {
+                openAuthModal();
+            }
         });
 
-        // ==================== アカウント認証処理 (追加) ====================
+        // ==================== アカウント認証・アクセスガード処理 ====================
         function getAuthToken() {
             return localStorage.getItem(STORAGE_KEY_TOKEN);
         }
 
         function getAuthUser() {
             return localStorage.getItem(STORAGE_KEY_USER);
+        }
+
+        // ログイン状態を検証するガード関数（未ログインの場合アラートを表示してモーダルを開く）
+        function checkAuthGuard() {
+            const user = getAuthUser();
+            const token = getAuthToken();
+            if (!user || !token) {
+                return false;
+            }
+            return true;
+        }
+
+        function requireAuth(actionCallback) {
+            if (!checkAuthGuard()) {
+                alert("この機能を利用するにはアカウント登録またはログインが必要です。");
+                openAuthModal();
+                return false;
+            }
+            if (typeof actionCallback === 'function') {
+                actionCallback();
+            }
+            return true;
         }
 
         function updateAuthUI() {
@@ -697,17 +726,24 @@
                 statusText.className = "text-emerald-400 font-bold";
                 authBtn.textContent = "ログアウト";
                 authBtn.onclick = handleLogout;
+                closeAuthModal();
             } else {
-                statusText.textContent = "未ログイン";
+                statusText.textContent = "未ログイン (登録が必要です)";
                 statusText.className = "text-amber-400 font-bold";
                 authBtn.textContent = "ログイン / 新規登録";
-                authBtn.onclick = toggleAuthModal;
+                authBtn.onclick = openAuthModal;
+                openAuthModal();
             }
         }
 
-        function toggleAuthModal() {
-            const modal = document.getElementById('authModal');
-            modal.classList.toggle('hidden');
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            if (checkAuthGuard()) {
+                document.getElementById('authModal').classList.add('hidden');
+            }
         }
 
         async function handleAuth(type) {
@@ -733,8 +769,7 @@
                 if (data.success) {
                     localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
                     localStorage.setItem(STORAGE_KEY_USER, data.username);
-                    alert(type === 'register' ? "アカウントを作成しログインしました！" : "ログインしました！");
-                    toggleAuthModal();
+                    alert(type === 'register' ? "アカウントを作成してログインしました！" : "ログインしました！");
                     updateAuthUI();
                 } else {
                     alert("認証エラー: " + data.error);
@@ -745,7 +780,7 @@
         }
 
         function handleLogout() {
-            if (confirm("ログアウトしますか？")) {
+            if (confirm("ログアウトしますか？未ログイン状態ではアプリを使用できません。")) {
                 localStorage.removeItem(STORAGE_KEY_TOKEN);
                 localStorage.removeItem(STORAGE_KEY_USER);
                 updateAuthUI();
@@ -779,6 +814,7 @@
 
         // 保存された負債記録のリセット
         function clearSavedDebt() {
+            if (!requireAuth()) return;
             if (confirm("これまでの睡眠負債の減額記録をリセットして最初から診断し直しますか？")) {
                 localStorage.removeItem(STORAGE_KEY_DEBT);
                 localStorage.removeItem(STORAGE_KEY_SURVEY);
@@ -940,6 +976,8 @@
         }
 
         function saveAndShowResults() {
+            if (!requireAuth()) return;
+
             const sleepMin = parseInt(document.getElementById('sleepSelect').value);
             const wakeMin = parseInt(document.getElementById('wakeSelect').value);
             
@@ -1043,6 +1081,7 @@
         }
 
         function proceedToSleepDetect() {
+            if (!requireAuth()) return;
             document.getElementById('surveyResultScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1055,6 +1094,7 @@
         }
 
         function goToSetupScreen() {
+            if (!requireAuth()) return;
             document.getElementById('reportScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1093,6 +1133,8 @@
         }
 
         async function startSleepTracking() {
+            if (!requireAuth()) return;
+
             try {
                 if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                     const permissionState = await DeviceMotionEvent.requestPermission();
