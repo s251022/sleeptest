@@ -69,6 +69,49 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between antialiased selection:bg-brand-500 selection:text-white">
 
+    <!-- アカウントステータスバー (追加) -->
+    <div id="authBar" class="bg-slate-900 border-b border-slate-800 px-4 py-2 text-xs flex justify-between items-center text-slate-300">
+        <div id="userInfo" class="flex items-center space-x-2">
+            <i class="fa-solid fa-user-circle text-slate-400 text-sm"></i>
+            <span>アカウント: <strong id="userStatusText" class="text-amber-400">未ログイン</strong></span>
+        </div>
+        <div>
+            <button id="authBtn" onclick="toggleAuthModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition">
+                ログイン / 新規登録
+            </button>
+        </div>
+    </div>
+
+    <!-- ログイン / 新規登録 モーダル (追加) -->
+    <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-white text-center">SleepPulse アカウント認証</h3>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">ユーザー名</label>
+                    <input type="text" id="authUsername" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" placeholder="user123">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">パスワード</label>
+                    <input type="password" id="authPassword" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2">
+                <button onclick="handleAuth('login')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl transition">
+                    ログイン
+                </button>
+                <button onclick="handleAuth('register')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl border border-slate-700 transition">
+                    新規アカウント作成
+                </button>
+                <button onclick="toggleAuthModal()" class="w-full py-1.5 text-xs text-slate-400 hover:text-slate-200">
+                    キャンセル
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- App Header -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
         <div class="max-w-3xl mx-auto flex justify-between items-center">
@@ -91,7 +134,7 @@
     <!-- Main Container -->
     <main class="max-w-3xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
 
-        <!-- ==================== STEP 1: アンケート入力画面 ==================== -->
+        <!-- STEP 1: アンケート入力画面 -->
         <section id="surveyInputScreen" class="space-y-6 my-auto py-4">
             <div class="text-center space-y-2">
                 <h2 class="text-2xl font-bold text-white tracking-tight">睡眠時間設定 & 睡眠負債診断</h2>
@@ -224,7 +267,7 @@
         </section>
 
 
-        <!-- ==================== STEP 2: アンケート結果表示画面 ==================== -->
+        <!-- STEP 2: アンケート結果表示画面 -->
         <section id="surveyResultScreen" class="hidden space-y-6 my-auto py-4">
             <div class="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
                 <div class="inline-flex items-center space-x-2 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold">
@@ -318,7 +361,7 @@
         </section>
 
 
-        <!-- ==================== STEP 3: SleepDetect2 準備画面 (setupScreen) ==================== -->
+        <!-- STEP 3: SleepDetect2 準備画面 (setupScreen) -->
         <section id="setupScreen" class="hidden space-y-6 my-auto py-4">
             <div class="text-center space-y-2">
                 <h2 class="text-2xl font-bold text-white tracking-tight">睡眠計測の準備</h2>
@@ -385,7 +428,7 @@
         </section>
 
 
-        <!-- ==================== STEP 4: SleepDetect2 計測中画面 (trackingScreen) ==================== -->
+        <!-- STEP 4: SleepDetect2 計測中画面 (trackingScreen) -->
         <section id="trackingScreen" class="hidden space-y-6 my-auto py-4 text-center">
             <div class="relative w-32 h-32 mx-auto flex items-center justify-center">
                 <div class="absolute inset-0 bg-brand-500/20 rounded-full pulse-effect"></div>
@@ -454,7 +497,7 @@
         </div>
 
 
-        <!-- ==================== STEP 5: SleepDetect2 解析報告画面 (reportScreen) ==================== -->
+        <!-- STEP 5: SleepDetect2 解析報告画面 (reportScreen) -->
         <section id="reportScreen" class="hidden space-y-6 my-auto py-4">
             <div class="bg-gradient-to-b from-slate-900 to-slate-900/60 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-5">
@@ -593,12 +636,13 @@
     <!-- JS Logic -->
     <script>
         // ==================== Cloudflare Worker 設定 ====================
-        // ここをご自身の Cloudflare Worker の URL に書き換えてください。
         const CLOUDFLARE_WORKER_URL = "https://sleeptest.s251022.workers.dev";
 
         // --- LocalStorage キー ---
         const STORAGE_KEY_SURVEY = "sleeppulse_survey_data";
         const STORAGE_KEY_DEBT = "sleeppulse_current_debt_yen";
+        const STORAGE_KEY_TOKEN = "sleeppulse_token";
+        const STORAGE_KEY_USER = "sleeppulse_username";
 
         // --- アンケート状態データ ---
         let currentAge = 30;
@@ -631,7 +675,82 @@
             checkCapabilities();
             initUnlockGesture();
             loadSavedData();
+            updateAuthUI();
         });
+
+        // ==================== アカウント認証処理 (追加) ====================
+        function getAuthToken() {
+            return localStorage.getItem(STORAGE_KEY_TOKEN);
+        }
+
+        function getAuthUser() {
+            return localStorage.getItem(STORAGE_KEY_USER);
+        }
+
+        function updateAuthUI() {
+            const username = getAuthUser();
+            const statusText = document.getElementById('userStatusText');
+            const authBtn = document.getElementById('authBtn');
+
+            if (username) {
+                statusText.textContent = username;
+                statusText.className = "text-emerald-400 font-bold";
+                authBtn.textContent = "ログアウト";
+                authBtn.onclick = handleLogout;
+            } else {
+                statusText.textContent = "未ログイン";
+                statusText.className = "text-amber-400 font-bold";
+                authBtn.textContent = "ログイン / 新規登録";
+                authBtn.onclick = toggleAuthModal;
+            }
+        }
+
+        function toggleAuthModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.toggle('hidden');
+        }
+
+        async function handleAuth(type) {
+            const username = document.getElementById('authUsername').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+
+            if (!username || !password) {
+                alert("ユーザー名とパスワードを入力してください。");
+                return;
+            }
+
+            const endpoint = type === 'register' ? '/api/register' : '/api/login';
+            const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
+
+            try {
+                const res = await fetch(baseUrl + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
+                    localStorage.setItem(STORAGE_KEY_USER, data.username);
+                    alert(type === 'register' ? "アカウントを作成しログインしました！" : "ログインしました！");
+                    toggleAuthModal();
+                    updateAuthUI();
+                } else {
+                    alert("認証エラー: " + data.error);
+                }
+            } catch (err) {
+                alert("通信エラーが発生しました: " + err.message);
+            }
+        }
+
+        function handleLogout() {
+            if (confirm("ログアウトしますか？")) {
+                localStorage.removeItem(STORAGE_KEY_TOKEN);
+                localStorage.removeItem(STORAGE_KEY_USER);
+                updateAuthUI();
+            }
+        }
 
         // 保存データの復元読み込み
         function loadSavedData() {
@@ -685,12 +804,16 @@
             statusIcon.className = "fa-solid fa-spinner animate-spin text-sm";
             statusText.textContent = "Cloudflare にデータを送信中...";
 
+            const headers = { 'Content-Type': 'application/json' };
+            const token = getAuthToken();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             try {
                 const response = await fetch(CLOUDFLARE_WORKER_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: headers,
                     body: JSON.stringify(payload)
                 });
 
@@ -768,7 +891,6 @@
             return `${hours}時間${mins > 0 ? mins + '分' : ''}`;
         }
 
-        // 金額（円）のフォーマット用関数（絶対値を用いてマイナス記号「-」を除去）
         function formatYen(amount) {
             return `${Math.abs(Number(amount)).toLocaleString()}円`;
         }
@@ -832,10 +954,8 @@
             const idealAvgMin = (ideal.min + ideal.max) / 2;
             const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
 
-            // 負債を -(時間) として処理（内部的にはマイナス値として保持）
             const initialDebtMinutes = -((q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued));
 
-            // 前回の睡眠負債がLocalStorageに保存されていればそれを引き継ぎ、無ければ初期診断値を適用
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
             let effectiveCurrentDebt = initialDebtMinutes;
 
@@ -884,7 +1004,6 @@
             document.getElementById('resSleepTime').textContent = formatMinTo24H(sleepMin);
             document.getElementById('resWakeTime').textContent = formatMinTo24H(wakeMin);
             
-            // 負債表示の更新（引き継がれた残高・円表記）
             document.getElementById('resDebtTime').textContent = formatYen(effectiveCurrentDebt);
 
             savedSurveyData = {
@@ -904,7 +1023,6 @@
 
             localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
 
-            // アプリ連携用送信
             if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.sleepHandler) {
                 window.webkit.messageHandlers.sleepHandler.postMessage(savedSurveyData);
             }
@@ -912,7 +1030,6 @@
                 window.AndroidInterface.sendSleepResult(JSON.stringify(savedSurveyData));
             }
 
-            // 画面切替
             document.getElementById('surveyInputScreen').classList.add('hidden');
             document.getElementById('surveyResultScreen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -937,7 +1054,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 解析報告画面から計測準備画面へ遷移する処理
         function goToSetupScreen() {
             document.getElementById('reportScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.remove('hidden');
@@ -1190,7 +1306,6 @@
             if (snoreCount > 20) score -= 10;
             score = Math.max(20, Math.min(100, score));
 
-            // 計測スコアに応じた睡眠負債の返済計算（返済額は正の値）
             let repaidDebt = 0;
             if (score >= 60) {
                 repaidDebt = Math.round(totalMins * (score / 100));
@@ -1198,7 +1313,6 @@
                 repaidDebt = 0;
             }
 
-            // 前回の睡眠負債（マイナスの値）に返済額を加算（0を目指す）
             let prevDebt = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
             let remainingDebt = Math.min(0, prevDebt + repaidDebt);
 
@@ -1206,19 +1320,16 @@
                 savedSurveyData.currentDebtMinutes = remainingDebt;
             }
 
-            // LocalStorage へ加算後の負債を保存
             localStorage.setItem(STORAGE_KEY_DEBT, remainingDebt);
             if (savedSurveyData) {
                 localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
             }
 
-            // 表示の更新
             document.getElementById('reportDuration').textContent = `${hrs}時間${mins}分`;
             document.getElementById('reportBedtimeJst').textContent = bedtimeJstStr;
             document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
             document.getElementById('reportScore').textContent = score;
 
-            // 返済額および残りの負債（符号なし）の出力
             document.getElementById('reportRepaidDebt').textContent = formatYen(repaidDebt);
             document.getElementById('reportRemainingDebt').textContent = formatYen(remainingDebt);
 
@@ -1249,7 +1360,8 @@
             // Cloudflare Worker への自動データ送信実行
             const payload = {
                 app: "SleepPulse AI",
-                version: "2.2.0",
+                version: "2.3.0",
+                account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: {
                     bedtime_jst: bedtimeJstStr,
@@ -1271,7 +1383,8 @@
         function exportJSON() {
             const reportData = {
                 app: "SleepPulse AI",
-                version: "2.2.0",
+                version: "2.3.0",
+                account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: {
                     bedtime_jst: bedtimeJstStr,
