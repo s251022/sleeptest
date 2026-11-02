@@ -1,6 +1,6 @@
 // Service Worker: プッシュ通知の受信イベント
 self.addEventListener('push', function(event) {
-  let data = { title: 'SleepPulse AI', body: '21:00になりました。本日の睡眠計測の準備をしましょう！' };
+  let data = { title: 'SleepPulse AI', body: '今日も忘れずに、睡眠計測をしましょう！' };
   
   if (event.data) {
     try {
