@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="manifest" href="./manifest.json">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -762,83 +761,6 @@
         let silentPeriodCount = 0;
 
         window.addEventListener('load', () => {
-        // ★1で生成した Public Key に差し替えてください
-        const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY_HERE";
-        
-        // Service Worker の登録 & Pushサブスクリプションの取得
-        async function initPushNotification() {
-          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn("このブラウザは Web Push に対応していません。");
-            return;
-          }
-        
-          try {
-            // Service Worker の登録
-            const reg = await navigator.serviceWorker.register('./sw.js');
-            console.log('Service Worker 登録成功:', reg);
-        
-            // 通知権限の確認・リクエスト
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-              console.log('通知権限が拒否されました');
-              return;
-            }
-        
-            // サブスクリプションの取得（未登録なら新規作成）
-            let subscription = await reg.pushManager.getSubscription();
-            if (!subscription) {
-              subscription = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-              });
-            }
-        
-            // ログイン済みであれば Cloudflare へサブスクリプションを送信保存
-            const token = getAuthToken();
-            if (token) {
-              await saveSubscriptionToCloudflare(subscription);
-            }
-          } catch (err) {
-            console.error('Push Notification 初期化エラー:', err);
-          }
-        }
-        
-        // VAPIDキー変換用ヘルパー関数
-        function urlBase64ToUint8Array(base64String) {
-          const padding = '='.repeat((4 - base64String.length % 4) % 4);
-          const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-          const rawData = window.atob(base64);
-          const outputArray = new Uint8Array(rawData.length);
-          for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-          }
-          return outputArray;
-        }
-        
-        // Cloudflare への PushSubscription 送信処理
-        async function saveSubscriptionToCloudflare(subscription) {
-          const token = getAuthToken();
-          if (!token) return;
-        
-          const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
-          try {
-            await fetch(baseUrl + '/api/subscribe-push', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ subscription })
-            });
-            console.log("PushSubscription を Cloudflare に保存しました。");
-          } catch (e) {
-            console.error("PushSubscription 送信失敗:", e);
-          }
-        }
-        
-        // アプリ起動時に初期化を実行
-        window.addEventListener('load', () => {
-
             initTimeOptions();
             checkCapabilities();
             initUnlockGesture();
