@@ -2,6 +2,8 @@
 <html lang="ja" class="dark h-full">
 <head>
     <link rel="manifest" href="./manifest.json">
+    <!-- favicon 404エラー対策 -->
+    <link rel="icon" href="data:,">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SleepPulse AI - アンケート & 睡眠解析Webアプリ</title>
@@ -710,6 +712,7 @@
     <script>
         // ==================== Cloudflare Worker 設定 ====================
         const CLOUDFLARE_WORKER_URL = "https://sleeptest.s251022.workers.dev";
+        const VAPID_PUBLIC_KEY = "BEdFGdzjG2Mi67POmSDuuyXRqlpL7tGtKTyQ6jYoC-K9pB0SS77AMg9HETpzVyccQfzYDpiL03tmUNujlH9JCuA";
 
         // --- LocalStorage キー ---
         const STORAGE_KEY_SURVEY = "sleeppulse_survey_data";
@@ -744,86 +747,80 @@
         let lastStage = "Awake";
         let silentPeriodCount = 0;
 
+        // 初期化処理
         window.addEventListener('load', () => {
-   // ★1で生成した Public Key に差し替えてください
-const VAPID_PUBLIC_KEY = "BEdFGdzjG2Mi67POmSDuuyXRqlpL7tGtKTyQ6jYoC-K9pB0SS77AMg9HETpzVyccQfzYDpiL03tmUNujlH9JCuA";
+            initTimeOptions();
+            loadSavedData();
+            updateAuthUI();
+            checkCapabilities();
+            initUnlockGesture();
+            initPushNotification();
+        });
 
-// Service Worker の登録 & Pushサブスクリプションの取得
-async function initPushNotification() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn("このブラウザは Web Push に対応していません。");
-    return;
-  }
+        // Service Worker の登録 & Pushサブスクリプションの取得
+        async function initPushNotification() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.warn("このブラウザは Web Push に対応していません。");
+                return;
+            }
 
-  try {
-    // Service Worker の登録
-    const reg = await navigator.serviceWorker.register('./sw.js');
-    console.log('Service Worker 登録成功:', reg);
+            try {
+                const reg = await navigator.serviceWorker.register('./sw.js');
+                console.log('Service Worker 登録成功:', reg);
 
-    // 通知権限の確認・リクエスト
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.log('通知権限が拒否されました');
-      return;
-    }
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('通知権限が拒否されました');
+                    return;
+                }
 
-    // サブスクリプションの取得（未登録なら新規作成）
-    let subscription = await reg.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-    }
+                let subscription = await reg.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
 
-    // ログイン済みであれば Cloudflare へサブスクリプションを送信保存
-    const token = getAuthToken();
-    if (token) {
-      await saveSubscriptionToCloudflare(subscription);
-    }
-  } catch (err) {
-    console.error('Push Notification 初期化エラー:', err);
-  }
-}
+                const token = getAuthToken();
+                if (token) {
+                    await saveSubscriptionToCloudflare(subscription);
+                }
+            } catch (err) {
+                console.error('Push Notification 初期化エラー:', err);
+            }
+        }
 
-// VAPIDキー変換用ヘルパー関数
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
 
-// Cloudflare への PushSubscription 送信処理
-async function saveSubscriptionToCloudflare(subscription) {
-  const token = getAuthToken();
-  if (!token) return;
+        async function saveSubscriptionToCloudflare(subscription) {
+            const token = getAuthToken();
+            if (!token) return;
 
-  const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
-  try {
-    await fetch(baseUrl + '/api/subscribe-push', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ subscription })
-    });
-    console.log("PushSubscription を Cloudflare に保存しました。");
-  } catch (e) {
-    console.error("PushSubscription 送信失敗:", e);
-  }
-}
-
-// アプリ起動時に初期化を実行
-window.addEventListener('load', () => {
-  // ... 既存の処理 ...
-  initPushNotification();
-});
+            const baseUrl = CLOUDFLARE_WORKER_URL.replace(/\/api\/sleep\/?$/, '');
+            try {
+                await fetch(baseUrl + '/api/subscribe-push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ subscription })
+                });
+                console.log("PushSubscription を Cloudflare に保存しました。");
+            } catch (e) {
+                console.error("PushSubscription 送信失敗:", e);
+            }
+        }
 
         // ==================== アカウント認証・アクセスガード処理 ====================
         function getAuthToken() {
@@ -954,7 +951,6 @@ window.addEventListener('load', () => {
                                 savedSurveyData.currentDebtMinutes = latestDebt;
                                 localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
                             }
-                            // UI更新
                             document.getElementById('savedDebtBanner').classList.remove('hidden');
                             document.getElementById('savedDebtText').textContent = formatYen(latestDebt);
                             document.getElementById('resDebtTime').textContent = formatYen(latestDebt);
@@ -1655,7 +1651,7 @@ window.addEventListener('load', () => {
             // 目標（普段の）睡眠時間の取得
             const targetMins = savedSurveyData ? savedSurveyData.actualMinutes : 480;
 
-            // 成果額 (sessionOutcome) の計算（プラス＝報酬、マイナス＝借金）
+            // 成果額 (sessionOutcome) の計算
             let sessionOutcome = 0;
 
             if (totalMins >= targetMins - 15 && score >= 60) {
@@ -1739,7 +1735,7 @@ window.addEventListener('load', () => {
 
             saveLocalHistory(sessionObj);
 
-            // Cloudflare Worker への自動データ送信実行（username を含めて送信）
+            // Cloudflare Worker への自動データ送信
             const payload = {
                 app: "SleepPulse AI",
                 version: "2.5.0",
