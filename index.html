@@ -119,7 +119,7 @@
         </div>
     </div>
 
-    <!-- App Header (ロゴのクリック動作を削除) -->
+    <!-- App Header -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
         <div class="max-w-3xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3 select-none">
@@ -160,15 +160,15 @@
                     </button>
                 </div>
 
-                <!-- 負債ステータスカード -->
-                <div class="bg-gradient-to-r from-rose-950/80 via-slate-900 to-emerald-950/80 rounded-2xl p-5 text-center border border-slate-800 shadow-lg space-y-2">
+                <!-- 収支/負債ステータスカード -->
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 rounded-2xl p-5 text-center border border-slate-800 shadow-lg space-y-2">
                     <div class="flex justify-center items-center space-x-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        <i class="fa-solid fa-receipt text-rose-400"></i>
-                        <span>現在の睡眠負債（借金）残高</span>
+                        <i class="fa-solid fa-coins text-amber-400"></i>
+                        <span>現在の睡眠収支（借金 / 報酬残高）</span>
                     </div>
-                    <div class="text-4xl font-black text-rose-300 font-mono tracking-tight" id="myPageCurrentDebt">0円</div>
+                    <div class="text-4xl font-black font-mono tracking-tight" id="myPageCurrentDebt">0円</div>
                     <p class="text-xs text-slate-400">
-                        継続的な高スコアの睡眠で負債を減額・完済しましょう！
+                        普段通りの睡眠で報酬をGET！短い睡眠は借金になるので注意しましょう。
                     </p>
                 </div>
 
@@ -183,8 +183,8 @@
                         <span class="text-lg font-bold text-brand-400 font-mono" id="myPageAvgScore">-- 点</span>
                     </div>
                     <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
-                        <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">累計返済時間</span>
-                        <span class="text-lg font-bold text-emerald-400 font-mono" id="myPageTotalRepaid">0分</span>
+                        <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">累計報酬/損益</span>
+                        <span class="text-lg font-bold text-emerald-400 font-mono" id="myPageTotalRepaid">0円</span>
                     </div>
                 </div>
 
@@ -204,9 +204,9 @@
                                 <thead class="bg-slate-900/90 sticky top-0 text-[10px] text-slate-400 uppercase font-semibold border-b border-slate-800">
                                     <tr>
                                         <th class="py-2.5 px-3">日付 (JST)</th>
-                                        <th class="py-2.5 px-3">時間</th>
+                                        <th class="py-2.5 px-3">睡眠時間</th>
                                         <th class="py-2.5 px-3">スコア</th>
-                                        <th class="py-2.5 px-3 text-right">返済額</th>
+                                        <th class="py-2.5 px-3 text-right">判定成果</th>
                                     </tr>
                                 </thead>
                                 <tbody id="historyTableBody" class="divide-y divide-slate-800/60">
@@ -226,17 +226,17 @@
         <!-- STEP 1: アンケート入力画面 -->
         <section id="surveyInputScreen" class="space-y-6 my-auto py-4">
             <div class="text-center space-y-2">
-                <h2 class="text-2xl font-bold text-white tracking-tight">睡眠時間設定 & 睡眠負債診断</h2>
+                <h2 class="text-2xl font-bold text-white tracking-tight">睡眠目標設定 & チャレンジ診断</h2>
                 <p class="text-sm text-slate-400 max-w-md mx-auto">
-                    年齢、目標時間、日頃の睡眠状態を入力して現在の睡眠負債（借金）を診断します。
+                    年齢、普段の睡眠時間、日頃の状態を入力して睡眠報酬＆借金システムを開始します。
                 </p>
             </div>
 
-            <!-- 過去の負債引き継ぎ通知バナー -->
+            <!-- 過去の記録引き継ぎ通知バナー -->
             <div id="savedDebtBanner" class="hidden bg-brand-950/60 border border-brand-500/40 rounded-2xl p-4 text-xs text-brand-200 flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <i class="fa-solid fa-clock-rotate-left text-brand-400 text-base"></i>
-                    <span>前回の睡眠負債記録を保持しています: <strong id="savedDebtText" class="text-brand-300 font-mono text-sm">0円</strong></span>
+                    <span>前回の睡眠収支記録を保持しています: <strong id="savedDebtText" class="text-brand-300 font-mono text-sm">0円</strong></span>
                 </div>
                 <button type="button" onclick="clearSavedDebt()" class="px-2.5 py-1 bg-rose-900/50 hover:bg-rose-800 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] transition cursor-pointer">
                     リセット
@@ -269,7 +269,7 @@
 
             <!-- 就寝時間 -->
             <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
-                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">就寝時間 (24時間表記)</div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">普段の就寝時間 (24時間表記)</div>
                 <div class="text-4xl font-black text-brand-400 font-mono text-center tracking-tight" id="sleepDisplay">23:00</div>
                 <div class="flex items-center space-x-2">
                     <button type="button" onclick="adjustTime('sleepSelect', -60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">-1時間</button>
@@ -282,7 +282,7 @@
 
             <!-- 起床時間 -->
             <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
-                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">起床時間 (24時間表記)</div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">普段の起床時間 (24時間表記)</div>
                 <div class="text-4xl font-black text-brand-400 font-mono text-center tracking-tight" id="wakeDisplay">07:00</div>
                 <div class="flex items-center space-x-2">
                     <button type="button" onclick="adjustTime('wakeSelect', -60)" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200">-1時間</button>
@@ -293,11 +293,11 @@
                 </div>
             </div>
 
-            <!-- 睡眠不足度（睡眠負債）チェック質問 -->
+            <!-- 睡眠チェック質問 -->
             <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
                 <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-                    <i class="fa-solid fa-battery-quarter text-rose-400"></i>
-                    <h3 class="text-sm font-bold text-slate-200">日頃の睡眠不足度チェック（睡眠負債診断）</h3>
+                    <i class="fa-solid fa-coins text-amber-400"></i>
+                    <h3 class="text-sm font-bold text-slate-200">日頃の睡眠習慣チェック</h3>
                 </div>
 
                 <!-- Q1: 日中の眠気 -->
@@ -335,7 +335,7 @@
 
                 <!-- Q4: 継続日数 -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-800">
-                    <label class="text-xs text-slate-300 font-semibold">Q4. 現在の睡眠生活（設定した就寝・起床時間）は何日続いていますか？</label>
+                    <label class="text-xs text-slate-300 font-semibold">Q4. 現在の睡眠生活は何日続いていますか？</label>
                     <div class="flex items-center space-x-3">
                         <input type="number" id="qDaysContinued" min="1" max="365" value="14" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs font-bold text-slate-100 focus:outline-none focus:border-brand-500">
                         <span class="text-xs text-slate-300 font-bold whitespace-nowrap">日間</span>
@@ -345,12 +345,12 @@
 
             <!-- 入力時間のサマリー -->
             <div class="bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 text-center text-white shadow-xl shadow-brand-600/20">
-                <div class="text-xs font-medium opacity-90 mb-1">設定された目標睡眠時間</div>
+                <div class="text-xs font-medium opacity-90 mb-1">設定された目標（普段の）睡眠時間</div>
                 <div class="text-3xl font-black font-mono tracking-tight" id="durationDisplay">8時間00分</div>
             </div>
 
             <button type="button" onclick="saveAndShowResults()" class="w-full py-4 bg-brand-600 hover:bg-brand-500 active:scale-98 transition text-white font-bold text-lg rounded-2xl shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 cursor-pointer">
-                <span>設定を保存して診断する</span>
+                <span>設定を保存してスタート</span>
                 <i class="fa-solid fa-arrow-right"></i>
             </button>
         </section>
@@ -368,19 +368,19 @@
 
                 <!-- 目標睡眠時間 -->
                 <div class="text-center py-2">
-                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">目標睡眠時間</div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">目標（普段の）睡眠時間</div>
                     <div class="text-5xl font-black text-brand-400 font-mono tracking-tight" id="resActualTime">8時間00分</div>
                 </div>
 
-                <!-- 睡眠負債（借金）カード -->
-                <div class="bg-gradient-to-r from-rose-950/80 to-amber-950/80 rounded-2xl p-5 text-center border border-rose-500/40 shadow-lg">
-                    <div class="flex justify-center items-center space-x-2 text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
-                        <i class="fa-solid fa-receipt"></i>
-                        <span>現在の残りの睡眠負債（借金）</span>
+                <!-- 睡眠収支カード -->
+                <div id="debtCardBox" class="bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 rounded-2xl p-5 text-center border border-brand-500/40 shadow-lg">
+                    <div class="flex justify-center items-center space-x-2 text-brand-300 text-xs font-bold uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-coins text-amber-400"></i>
+                        <span>現在の睡眠残高 (報酬 / 借金)</span>
                     </div>
-                    <div class="text-4xl font-black text-rose-300 font-mono tracking-tight py-1" id="resDebtTime">0円</div>
-                    <p class="text-xs text-rose-200/80 mt-1">
-                        蓄積された睡眠不足の累積データです。<br>高スコアの睡眠を計測して負債をどんどん減らしていきましょう！
+                    <div class="text-4xl font-black text-brand-300 font-mono tracking-tight py-1" id="resDebtTime">0円</div>
+                    <p class="text-xs text-slate-300 mt-1">
+                        普段通りの睡眠をとると報酬が発生します！<br>目標より少ない時間だと借金が増えていくので注意しましょう。
                     </p>
                 </div>
 
@@ -611,26 +611,26 @@
                     </div>
                 </div>
 
-                <!-- 睡眠負債返済結果カード -->
+                <!-- 睡眠報酬 & 借金結果カード -->
                 <div class="bg-slate-950/90 rounded-2xl p-5 border border-brand-500/30 shadow-xl space-y-3">
-                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-                        <i class="fa-solid fa-piggy-bank text-sm"></i>
-                        <span>睡眠負債（借金）返済レポート</span>
+                    <div class="flex items-center space-x-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                        <i class="fa-solid fa-coins text-sm"></i>
+                        <span>睡眠報酬 & 借金判定レポート</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 text-center">
                         <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] text-slate-400 font-semibold block">今回の返済額 (減額)</span>
-                            <span class="text-xl font-extrabold text-emerald-400 font-mono" id="reportRepaidDebt">0円</span>
+                            <span class="text-[10px] text-slate-400 font-semibold block">今回の成果 (報酬 / 借金)</span>
+                            <span class="text-xl font-extrabold font-mono" id="reportRepaidDebt">0円</span>
                         </div>
                         <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] text-slate-400 font-semibold block">残りの睡眠負債</span>
-                            <span class="text-xl font-extrabold text-rose-400 font-mono" id="reportRemainingDebt">0円</span>
+                            <span class="text-[10px] text-slate-400 font-semibold block">現在の累積残高</span>
+                            <span class="text-xl font-extrabold font-mono" id="reportRemainingDebt">0円</span>
                         </div>
                     </div>
 
                     <p class="text-[11px] text-slate-400 text-center leading-relaxed" id="reportDebtMessage">
-                        計測されたスコアに応じて負債が自動返済されました！
+                        計測結果に基づき、成果が反映されました！
                     </p>
                 </div>
 
@@ -729,7 +729,7 @@
 
         // --- LocalStorage キー ---
         const STORAGE_KEY_SURVEY = "sleeppulse_survey_data";
-        const STORAGE_KEY_DEBT = "sleeppulse_current_debt_yen";
+        const STORAGE_KEY_DEBT = "sleeppulse_current_debt_yen"; // 正の値＝プラス報酬、負の値＝借金
         const STORAGE_KEY_TOKEN = "sleeppulse_token";
         const STORAGE_KEY_USER = "sleeppulse_username";
         const STORAGE_KEY_HISTORY = "sleeppulse_local_history";
@@ -859,7 +859,7 @@
                     localStorage.setItem(STORAGE_KEY_USER, data.username);
                     alert(type === 'register' ? "アカウントを作成してログインしました！" : "ログインしました！");
                     updateAuthUI();
-                    syncUserDataFromCloudflare(); // ログイン成功時にクラウドから負債情報を全同期
+                    syncUserDataFromCloudflare();
                 } else {
                     alert("認証エラー: " + data.error);
                 }
@@ -879,7 +879,7 @@
             }
         }
 
-        // ==================== マルチデバイス負債同期処理 (新規追加) ====================
+        // ==================== マルチデバイス負債/報酬同期処理 ====================
         async function syncUserDataFromCloudflare() {
             const token = getAuthToken();
             if (!token || !CLOUDFLARE_WORKER_URL || CLOUDFLARE_WORKER_URL.includes('your-worker-subdomain')) return;
@@ -892,7 +892,6 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data.sessions && data.sessions.length > 0) {
-                        // 最新のセッションデータを抽出して最新負債を取得
                         const sessions = data.sessions.map(s => s.session || s);
                         sessions.sort((a, b) => new Date(b.iso_start || b.bedtime_jst) - new Date(a.iso_start || a.bedtime_jst));
                         const latestSession = sessions[0];
@@ -913,7 +912,7 @@
                     }
                 }
             } catch (e) {
-                console.warn("Cloudflare 負債データ同期スキップ:", e);
+                console.warn("Cloudflare 収支データ同期スキップ:", e);
             }
         }
 
@@ -985,30 +984,33 @@
                 tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">まだ計測データが記録されていません</td></tr>`;
                 document.getElementById('myPageTotalCount').textContent = "0 回";
                 document.getElementById('myPageAvgScore').textContent = "-- 点";
-                document.getElementById('myPageTotalRepaid').textContent = "0分";
+                document.getElementById('myPageTotalRepaid').textContent = "0円";
                 return;
             }
 
             sessions.sort((a, b) => new Date(b.iso_start || b.bedtime_jst) - new Date(a.iso_start || a.bedtime_jst));
 
             let totalScore = 0;
-            let totalRepaidMins = 0;
+            let totalProfit = 0;
 
             tbody.innerHTML = sessions.map(item => {
                 const score = item.sleep_score || item.score || 0;
-                const repaid = item.repaid_debt_minutes || 0;
+                const repaid = item.repaid_debt_minutes || 0; // プラスが報酬、マイナスが借金
                 const durationMins = item.total_duration_minutes || 0;
                 const dateStr = item.bedtime_jst ? item.bedtime_jst.split(' ')[0] : '----/--/--';
 
                 totalScore += score;
-                totalRepaidMins += repaid;
+                totalProfit += repaid;
+
+                const isReward = repaid >= 0;
+                const sign = isReward ? "+" : "";
 
                 return `
                     <tr class="hover:bg-slate-900/60 transition border-b border-slate-800/40">
                         <td class="py-2.5 px-3 font-mono text-slate-200">${dateStr}</td>
                         <td class="py-2.5 px-3 font-mono text-slate-400">${formatDurationText(durationMins)}</td>
                         <td class="py-2.5 px-3 font-bold ${score >= 80 ? 'text-emerald-400' : score >= 60 ? 'text-brand-400' : 'text-rose-400'}">${score} 点</td>
-                        <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">+${formatYen(repaid)}</td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold ${isReward ? 'text-emerald-400' : 'text-rose-400'}">${sign}${formatYen(repaid)}</td>
                     </tr>
                 `;
             }).join('');
@@ -1016,7 +1018,7 @@
             const avgScore = Math.round(totalScore / sessions.length);
             document.getElementById('myPageTotalCount').textContent = `${sessions.length} 回`;
             document.getElementById('myPageAvgScore').textContent = `${avgScore} 点`;
-            document.getElementById('myPageTotalRepaid').textContent = `${totalRepaidMins}分`;
+            document.getElementById('myPageTotalRepaid').textContent = (totalProfit >= 0 ? "+" : "") + formatYen(totalProfit);
         }
 
         function saveLocalHistory(sessionData) {
@@ -1054,10 +1056,10 @@
             }
         }
 
-        // 保存された負債記録のリセット
+        // 保存された記録のリセット
         function clearSavedDebt() {
             if (!requireAuth()) return;
-            if (confirm("これまでの睡眠負債の減額記録をリセットして最初から診断し直しますか？")) {
+            if (confirm("これまでの睡眠報酬・借金記録をリセットして最初から始めますか？")) {
                 localStorage.removeItem(STORAGE_KEY_DEBT);
                 localStorage.removeItem(STORAGE_KEY_SURVEY);
                 savedSurveyData = null;
@@ -1169,8 +1171,15 @@
             return `${hours}時間${mins > 0 ? mins + '分' : ''}`;
         }
 
+        // 金額フォーマット（プラス＝報酬、マイナス＝借金）
         function formatYen(amount) {
-            return `${Math.abs(Number(amount)).toLocaleString()}円`;
+            const val = Number(amount);
+            if (val > 0) {
+                return `${val.toLocaleString()}円 (報酬)`;
+            } else if (val < 0) {
+                return `${Math.abs(val).toLocaleString()}円 (借金)`;
+            }
+            return `0円`;
         }
 
         function calculateSleepDurationMinutes(sleepMin, wakeMin) {
@@ -1234,10 +1243,11 @@
             const idealAvgMin = (ideal.min + ideal.max) / 2;
             const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
 
+            // 初期診断での借金初期値計算（マイナス値＝借金）
             const initialDebtMinutes = -((q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued));
 
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
-            let effectiveCurrentDebt = initialDebtMinutes;
+            let effectiveCurrentDebt = 0;
 
             if (storedDebt !== null) {
                 const parsedDebt = parseInt(storedDebt, 10);
@@ -1245,7 +1255,8 @@
                     effectiveCurrentDebt = parsedDebt;
                 }
             } else {
-                localStorage.setItem(STORAGE_KEY_DEBT, initialDebtMinutes);
+                effectiveCurrentDebt = initialDebtMinutes;
+                localStorage.setItem(STORAGE_KEY_DEBT, effectiveCurrentDebt);
             }
 
             const heroBox = document.getElementById('diffHeroBox');
@@ -1548,6 +1559,7 @@
             overlay.addEventListener('touchend', cancelUnlock);
         }
 
+        // ==================== 計測終了 & 報酬/借金判定ロジック (大幅改定) ====================
         function stopSleepTracking() {
             endTime = new Date();
             wakeTimeJstStr = formatJST(endTime);
@@ -1586,46 +1598,72 @@
             const pctRemVal = Math.round((countRem / totalSamples) * 100);
             const pctAwakeVal = Math.round((countAwake / totalSamples) * 100);
 
+            // スコア算出 (100点満点)
             let score = 100;
             if (totalMins < 360) score -= 15;
             if (awakeningCount > 3) score -= (awakeningCount * 3);
             if (snoreCount > 20) score -= 10;
             score = Math.max(20, Math.min(100, score));
 
-            let repaidDebt = 0;
-            if (score >= 60) {
-                repaidDebt = Math.round(totalMins * (score / 100));
+            // 目標（普段の）睡眠時間の取得（アンケートで設定された時間）
+            const targetMins = savedSurveyData ? savedSurveyData.actualMinutes : 480;
+
+            // 成果額 (repaidDebt) の計算：プラス＝報酬獲得、マイナス＝借金発生
+            let sessionOutcome = 0;
+
+            // 判定条件：実際の睡眠時間が目標時間（普段の時間 - 15分までの許容）以上かつスコア60以上
+            if (totalMins >= targetMins - 15 && score >= 60) {
+                // 普段通りの睡眠を達成！ → 報酬（基本報酬＋スコアボーナス）を付与
+                const baseReward = Math.round(totalMins * (score / 100));
+                const bonus = score >= 90 ? 100 : 0;
+                sessionOutcome = baseReward + bonus; // 正の値
             } else {
-                repaidDebt = 0;
+                // 普段より短い睡眠、またはスコア低迷！ → 不足分に応じて借金発生
+                const shortageMins = Math.max(30, targetMins - totalMins);
+                const penaltyScoreFactor = (100 - score) * 2;
+                sessionOutcome = -(shortageMins + penaltyScoreFactor); // 負の値
             }
 
-            let prevDebt = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
-            let remainingDebt = Math.min(0, prevDebt + repaidDebt);
+            // 累積残高の更新（正＝報酬貯金、負＝借金残高）
+            let prevBalance = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
+            let newBalance = prevBalance + sessionOutcome;
 
             if (savedSurveyData) {
-                savedSurveyData.currentDebtMinutes = remainingDebt;
+                savedSurveyData.currentDebtMinutes = newBalance;
             }
 
-            localStorage.setItem(STORAGE_KEY_DEBT, remainingDebt);
+            // LocalStorage へ保存
+            localStorage.setItem(STORAGE_KEY_DEBT, newBalance);
             if (savedSurveyData) {
                 localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
             }
 
+            // UIの表示更新
             document.getElementById('reportDuration').textContent = `${hrs}時間${mins}分`;
             document.getElementById('reportBedtimeJst').textContent = bedtimeJstStr;
             document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
             document.getElementById('reportScore').textContent = score;
 
-            document.getElementById('reportRepaidDebt').textContent = formatYen(repaidDebt);
-            document.getElementById('reportRemainingDebt').textContent = formatYen(remainingDebt);
+            const repaidEl = document.getElementById('reportRepaidDebt');
+            const remainingEl = document.getElementById('reportRemainingDebt');
+
+            // 今回の成果の表示切り替え
+            if (sessionOutcome >= 0) {
+                repaidEl.textContent = `+${sessionOutcome}円 (報酬)`;
+                repaidEl.className = "text-xl font-extrabold text-emerald-400 font-mono";
+            } else {
+                repaidEl.textContent = `${sessionOutcome}円 (借金)`;
+                repaidEl.className = "text-xl font-extrabold text-rose-400 font-mono";
+            }
+
+            remainingEl.textContent = formatYen(newBalance);
+            remainingEl.className = newBalance >= 0 ? "text-xl font-extrabold text-emerald-400 font-mono" : "text-xl font-extrabold text-rose-400 font-mono";
 
             const debtMsg = document.getElementById('reportDebtMessage');
-            if (remainingDebt >= 0) {
-                debtMsg.innerHTML = "🎉 <strong>おめでとうございます！睡眠負債（借金）を完済しました！</strong> この調子で良い睡眠習慣を維持しましょう。";
-            } else if (repaidDebt > 0) {
-                debtMsg.innerHTML = `今回の睡眠で <strong>${formatYen(repaidDebt)}</strong> の負債を返済しました！完済まであと ${formatYen(remainingDebt)} です。`;
+            if (sessionOutcome >= 0) {
+                debtMsg.innerHTML = `🎉 <strong>目標達成！普段通りの睡眠で ${sessionOutcome}円 の報酬を獲得しました！</strong><br>現在の睡眠残高: <strong>${formatYen(newBalance)}</strong>`;
             } else {
-                debtMsg.innerHTML = "睡眠スコアが低かったため、今回は負債を返済できませんでした。次回はより良い睡眠環境を整えましょう。";
+                debtMsg.innerHTML = `⚠️ <strong>睡眠時間が普段より短かったため、${Math.abs(sessionOutcome)}円 の借金が発生しました。</strong><br>次回は目標時間（${formatDurationText(targetMins)}）をしっかり確保しましょう！`;
             }
 
             document.getElementById('pctDeep').textContent = `${pctDeepVal}%`;
@@ -1651,8 +1689,8 @@
                 iso_end: endTime ? endTime.toISOString() : null,
                 total_duration_minutes: totalMins,
                 sleep_score: score,
-                repaid_debt_minutes: repaidDebt,
-                remaining_debt_minutes: remainingDebt,
+                repaid_debt_minutes: sessionOutcome, // 成果（＋報酬、−借金）
+                remaining_debt_minutes: newBalance,
                 snore_count: snoreCount,
                 awakening_count: awakeningCount,
                 timeline: timelineData
@@ -1663,7 +1701,7 @@
             // Cloudflare Worker への自動データ送信実行
             const payload = {
                 app: "SleepPulse AI",
-                version: "2.4.0",
+                version: "2.5.0",
                 account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: sessionObj
@@ -1674,7 +1712,7 @@
         function exportJSON() {
             const reportData = {
                 app: "SleepPulse AI",
-                version: "2.4.0",
+                version: "2.5.0",
                 account_id: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: {
