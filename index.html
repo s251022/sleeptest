@@ -1699,10 +1699,12 @@
             saveLocalHistory(sessionObj);
 
             // Cloudflare Worker への自動データ送信実行
-            const payload = {
+
+           const payload = {
                 app: "SleepPulse AI",
                 version: "2.5.0",
                 account_id: getAuthUser() || "guest",
+                username: getAuthUser() || "guest", // ← 送信データに username を追加
                 survey_target: savedSurveyData,
                 session: sessionObj
             };
