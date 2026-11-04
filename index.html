@@ -86,7 +86,7 @@
         </div>
     </div>
 
-    <!-- ログイン / 新規登録 必須モーダル (キャンセル無効) -->
+    <!-- ログイン / 新規登録 必須モーダル -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <div class="text-center space-y-1">
@@ -300,7 +300,6 @@
                     <h3 class="text-sm font-bold text-slate-200">日頃の睡眠習慣チェック</h3>
                 </div>
 
-                <!-- Q1: 日中の眠気 -->
                 <div class="space-y-1.5">
                     <label class="text-xs text-slate-300 font-semibold">Q1. 日中（仕事や授業中など）に強烈な眠気を感じますか？</label>
                     <select id="qDayDrowsiness" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
@@ -311,7 +310,6 @@
                     </select>
                 </div>
 
-                <!-- Q2: 休日の朝寝坊 -->
                 <div class="space-y-1.5">
                     <label class="text-xs text-slate-300 font-semibold">Q2. 休日は平日よりどのくらい長く寝てしまいますか？</label>
                     <select id="qHolidaySleep" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
@@ -322,7 +320,6 @@
                     </select>
                 </div>
 
-                <!-- Q3: 朝の起床時の感覚 -->
                 <div class="space-y-1.5">
                     <label class="text-xs text-slate-300 font-semibold">Q3. 朝起きた時の満足度・目覚めの感覚はどうですか？</label>
                     <select id="qWakeQuality" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-100 focus:outline-none focus:border-brand-500">
@@ -333,7 +330,6 @@
                     </select>
                 </div>
 
-                <!-- Q4: 継続日数 -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-800">
                     <label class="text-xs text-slate-300 font-semibold">Q4. 現在の睡眠生活は何日続いていますか？</label>
                     <div class="flex items-center space-x-3">
@@ -343,7 +339,6 @@
                 </div>
             </div>
 
-            <!-- 入力時間のサマリー -->
             <div class="bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 text-center text-white shadow-xl shadow-brand-600/20">
                 <div class="text-xs font-medium opacity-90 mb-1">設定された目標（普段の）睡眠時間</div>
                 <div class="text-3xl font-black font-mono tracking-tight" id="durationDisplay">8時間00分</div>
@@ -366,13 +361,11 @@
 
                 <div class="text-xs font-semibold text-slate-400" id="resAgeText">30歳の睡眠データ</div>
 
-                <!-- 目標睡眠時間 -->
                 <div class="text-center py-2">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">目標（普段の）睡眠時間</div>
                     <div class="text-5xl font-black text-brand-400 font-mono tracking-tight" id="resActualTime">8時間00分</div>
                 </div>
 
-                <!-- 睡眠収支カード -->
                 <div id="debtCardBox" class="bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 rounded-2xl p-5 text-center border border-brand-500/40 shadow-lg">
                     <div class="flex justify-center items-center space-x-2 text-brand-300 text-xs font-bold uppercase tracking-wider mb-1">
                         <i class="fa-solid fa-coins text-amber-400"></i>
@@ -384,13 +377,11 @@
                     </p>
                 </div>
 
-                <!-- 差分カード -->
                 <div id="diffHeroBox" class="rounded-2xl p-4 text-center border transition-all">
                     <div class="text-xs font-bold opacity-90 mb-1" id="diffHeroTitle">理想の睡眠時間との差</div>
                     <div class="text-2xl font-black" id="diffHeroValue">+0分</div>
                 </div>
 
-                <!-- 昼夜逆転 警告＆提案カード -->
                 <div id="warningCard" class="hidden bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4 text-left space-y-3">
                     <div class="flex items-center space-x-2 text-amber-400 font-bold text-sm">
                         <i class="fa-solid fa-triangle-exclamation"></i>
@@ -409,7 +400,6 @@
                     </div>
                 </div>
 
-                <!-- 比較グリッド -->
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
                         <div class="text-[10px] text-slate-400 font-semibold mb-1">年齢区分</div>
@@ -421,7 +411,6 @@
                     </div>
                 </div>
 
-                <!-- 詳細設定 -->
                 <div class="flex justify-around bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-center">
                     <div>
                         <div class="text-[10px] text-slate-400 font-semibold mb-0.5">就寝時間</div>
@@ -435,7 +424,6 @@
                 </div>
             </div>
 
-            <!-- アクションボタン群 -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <button type="button" onclick="backToInput()" class="w-full sm:w-1/2 py-3.5 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 font-bold text-sm rounded-2xl border border-slate-700 transition cursor-pointer flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-rotate-left"></i>
@@ -459,12 +447,10 @@
                 </p>
             </div>
 
-            <!-- Sensor Checklist -->
             <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">センサー & システムステータス</h3>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <!-- Wake Lock -->
                     <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-brand-400" id="iconWakeLock">
                             <i class="fa-solid fa-bolt"></i>
@@ -475,7 +461,6 @@
                         </div>
                     </div>
 
-                    <!-- Accelerometer -->
                     <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-accent-teal" id="iconAccel">
                             <i class="fa-solid fa-mobile-screen"></i>
@@ -486,7 +471,6 @@
                         </div>
                     </div>
 
-                    <!-- Microphone -->
                     <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-accent-purple" id="iconMic">
                             <i class="fa-solid fa-microphone"></i>
@@ -504,7 +488,6 @@
                 </div>
             </div>
 
-            <!-- Buttons -->
             <div class="flex flex-col sm:flex-row gap-3 text-center pt-2">
                 <button type="button" onclick="backToSurveyResult()" class="w-full sm:w-1/3 py-4 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 font-semibold text-sm rounded-2xl border border-slate-700 transition cursor-pointer">
                     アンケート画面に戻る
@@ -765,6 +748,7 @@
             checkCapabilities();
             initUnlockGesture();
             loadSavedData();
+            updateAuthUI(); // ページ読み込み時にログインUI状態を更新
             
             // ログイン済みならクラウドから最新データを自動取得
             if (checkAuthGuard()) {
@@ -995,7 +979,7 @@
 
             tbody.innerHTML = sessions.map(item => {
                 const score = item.sleep_score || item.score || 0;
-                const repaid = item.repaid_debt_minutes || 0; // プラスが報酬、マイナスが借金
+                const repaid = item.repaid_debt_minutes || 0;
                 const durationMins = item.total_duration_minutes || 0;
                 const dateStr = item.bedtime_jst ? item.bedtime_jst.split(' ')[0] : '----/--/--';
 
@@ -1031,7 +1015,6 @@
             localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(0, 50)));
         }
 
-        // 保存データの復元読み込み
         function loadSavedData() {
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
             const storedSurvey = localStorage.getItem(STORAGE_KEY_SURVEY);
@@ -1056,7 +1039,6 @@
             }
         }
 
-        // 保存された記録のリセット
         function clearSavedDebt() {
             if (!requireAuth()) return;
             if (confirm("これまでの睡眠報酬・借金記録をリセットして最初から始めますか？")) {
@@ -1171,7 +1153,6 @@
             return `${hours}時間${mins > 0 ? mins + '分' : ''}`;
         }
 
-        // 金額フォーマット（プラス＝報酬、マイナス＝借金）
         function formatYen(amount) {
             const val = Number(amount);
             if (val > 0) {
@@ -1243,7 +1224,6 @@
             const idealAvgMin = (ideal.min + ideal.max) / 2;
             const dailyShortageMin = Math.max(0, idealAvgMin - actualDiffMin);
 
-            // 初期診断での借金初期値計算（マイナス値＝借金）
             const initialDebtMinutes = -((q1 + q2 + q3) + Math.round(dailyShortageMin * daysContinued));
 
             const storedDebt = localStorage.getItem(STORAGE_KEY_DEBT);
@@ -1559,7 +1539,7 @@
             overlay.addEventListener('touchend', cancelUnlock);
         }
 
-        // ==================== 計測終了 & 報酬/借金判定ロジック (大幅改定) ====================
+        // ==================== 計測終了 & 報酬/借金判定ロジック ====================
         function stopSleepTracking() {
             endTime = new Date();
             wakeTimeJstStr = formatJST(endTime);
@@ -1605,26 +1585,23 @@
             if (snoreCount > 20) score -= 10;
             score = Math.max(20, Math.min(100, score));
 
-            // 目標（普段の）睡眠時間の取得（アンケートで設定された時間）
+            // 目標（普段の）睡眠時間の取得
             const targetMins = savedSurveyData ? savedSurveyData.actualMinutes : 480;
 
-            // 成果額 (repaidDebt) の計算：プラス＝報酬獲得、マイナス＝借金発生
+            // 成果額 (sessionOutcome) の計算（プラス＝報酬、マイナス＝借金）
             let sessionOutcome = 0;
 
-            // 判定条件：実際の睡眠時間が目標時間（普段の時間 - 15分までの許容）以上かつスコア60以上
             if (totalMins >= targetMins - 15 && score >= 60) {
-                // 普段通りの睡眠を達成！ → 報酬（基本報酬＋スコアボーナス）を付与
                 const baseReward = Math.round(totalMins * (score / 100));
                 const bonus = score >= 90 ? 100 : 0;
-                sessionOutcome = baseReward + bonus; // 正の値
+                sessionOutcome = baseReward + bonus;
             } else {
-                // 普段より短い睡眠、またはスコア低迷！ → 不足分に応じて借金発生
                 const shortageMins = Math.max(30, targetMins - totalMins);
                 const penaltyScoreFactor = (100 - score) * 2;
-                sessionOutcome = -(shortageMins + penaltyScoreFactor); // 負の値
+                sessionOutcome = -(shortageMins + penaltyScoreFactor);
             }
 
-            // 累積残高の更新（正＝報酬貯金、負＝借金残高）
+            // 累積残高の更新
             let prevBalance = savedSurveyData ? savedSurveyData.currentDebtMinutes : 0;
             let newBalance = prevBalance + sessionOutcome;
 
@@ -1632,13 +1609,11 @@
                 savedSurveyData.currentDebtMinutes = newBalance;
             }
 
-            // LocalStorage へ保存
             localStorage.setItem(STORAGE_KEY_DEBT, newBalance);
             if (savedSurveyData) {
                 localStorage.setItem(STORAGE_KEY_SURVEY, JSON.stringify(savedSurveyData));
             }
 
-            // UIの表示更新
             document.getElementById('reportDuration').textContent = `${hrs}時間${mins}分`;
             document.getElementById('reportBedtimeJst').textContent = bedtimeJstStr;
             document.getElementById('reportWakeTimeJst').textContent = wakeTimeJstStr;
@@ -1647,7 +1622,6 @@
             const repaidEl = document.getElementById('reportRepaidDebt');
             const remainingEl = document.getElementById('reportRemainingDebt');
 
-            // 今回の成果の表示切り替え
             if (sessionOutcome >= 0) {
                 repaidEl.textContent = `+${sessionOutcome}円 (報酬)`;
                 repaidEl.className = "text-xl font-extrabold text-emerald-400 font-mono";
@@ -1689,7 +1663,7 @@
                 iso_end: endTime ? endTime.toISOString() : null,
                 total_duration_minutes: totalMins,
                 sleep_score: score,
-                repaid_debt_minutes: sessionOutcome, // 成果（＋報酬、−借金）
+                repaid_debt_minutes: sessionOutcome,
                 remaining_debt_minutes: newBalance,
                 snore_count: snoreCount,
                 awakening_count: awakeningCount,
@@ -1698,13 +1672,12 @@
 
             saveLocalHistory(sessionObj);
 
-            // Cloudflare Worker への自動データ送信実行
-
-           const payload = {
+            // Cloudflare Worker への自動データ送信実行（username を含めて送信）
+            const payload = {
                 app: "SleepPulse AI",
                 version: "2.5.0",
                 account_id: getAuthUser() || "guest",
-                username: getAuthUser() || "guest", 
+                username: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: sessionObj
             };
@@ -1716,6 +1689,7 @@
                 app: "SleepPulse AI",
                 version: "2.5.0",
                 account_id: getAuthUser() || "guest",
+                username: getAuthUser() || "guest",
                 survey_target: savedSurveyData,
                 session: {
                     bedtime_jst: bedtimeJstStr,
